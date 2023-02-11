@@ -1,7 +1,7 @@
 # Gekitai
 
 Esse programa foi feito para a disciplina de Programação Paralela e Distribuida do curso de engenharia da computação
-no IFCE do semestre 2021.1. O objetivo era utilizar sockets para implementar a comunicação peer-to-peer entre os
+no IFCE do semestre 2023.1. O objetivo era utilizar sockets para implementar a comunicação peer-to-peer entre os
 aplicativos clientes.
 
 Como o foco era a comunicação entre aplicativos, as regras do jogo não foram implementadas. Outros requisitos do

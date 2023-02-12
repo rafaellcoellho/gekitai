@@ -6,6 +6,7 @@ colorama==0.4.6
 distlib==0.3.6
 exceptiongroup==1.1.0
 filelock==3.9.0
+gekitai @ file:///home/rafaellcoellho/Workspace/gekitai/dist/gekitai-0.0.1-py3-none-any.whl
 iniconfig==2.0.0
 packaging==23.0
 platformdirs==3.0.0

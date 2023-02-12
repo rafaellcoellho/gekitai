@@ -1,8 +1,10 @@
 import argparse
 import sys
+from dataclasses import dataclass
 from typing import Sequence
 
 from gekitai import __version__
+from gekitai.modo_de_espera import executar_modo_espera
 
 
 class Erro(Exception):
@@ -12,6 +14,19 @@ class Erro(Exception):
 
     def __str__(self):
         return self.mensagem
+
+
+@dataclass
+class ModoNaoImplementado(Erro):
+    mensagem: str = "Modo inválido"
+    codigo_de_status: int = 1
+
+
+def executa_modo(argumentos: argparse.Namespace):
+    if argumentos.modo == "teste":
+        executar_modo_espera()
+    else:
+        raise ModoNaoImplementado
 
 
 def main(argv: Sequence[str] | None = None):
@@ -39,12 +54,18 @@ def main(argv: Sequence[str] | None = None):
         help="mostra ajuda do programa",
     )
 
-    parser_principal.add_argument("modo")
+    subparsers = parser_principal.add_subparsers(dest="modo")
 
+    subparsers.add_parser(
+        "teste", help="programa de exemplo para testar funcionamento do pytest"
+    )
+
+    if len(argumentos) == 0:
+        argumentos = ["teste"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:
-        print(f"modo escolhido: {argumentos_formatados.modo}")
+        executa_modo(argumentos=argumentos_formatados)
     except Erro as erro:
         print(erro.mensagem)
         return erro.codigo_de_status

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from gekitai import __version__
-from gekitai.modo_de_espera import executar_modo_espera
+from gekitai.pocs.logo_quicando import executar_logo_quicando
 
 
 class Erro(Exception):
@@ -24,7 +24,7 @@ class ModoNaoImplementado(Erro):
 
 def executa_modo(argumentos: argparse.Namespace):
     if argumentos.modo == "teste":
-        executar_modo_espera()
+        executar_logo_quicando()
     else:
         raise ModoNaoImplementado
 
@@ -56,9 +56,7 @@ def main(argv: Sequence[str] | None = None):
 
     subparsers = parser_principal.add_subparsers(dest="modo")
 
-    subparsers.add_parser(
-        "teste", help="programa de exemplo para testar funcionamento do pytest"
-    )
+    subparsers.add_parser("logo", help="mostrar logo do gekitai quicando pela tela")
 
     if len(argumentos) == 0:
         argumentos = ["teste"]

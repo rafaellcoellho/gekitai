@@ -12,7 +12,7 @@ COR_DO_CIRCULO: Tuple[int, int, int] = (200, 200, 200)
 RAIO_DO_CIRCULO: int = 20
 
 
-def executar_modo_espera():
+def executar_logo_quicando():
     dx: int = 3
     dy: int = 4
     x: int = 100

@@ -23,7 +23,7 @@ class ModoNaoImplementado(Erro):
 
 
 def executa_modo(argumentos: argparse.Namespace):
-    if argumentos.modo == "teste":
+    if argumentos.modo == "logo":
         executar_logo_quicando()
     else:
         raise ModoNaoImplementado

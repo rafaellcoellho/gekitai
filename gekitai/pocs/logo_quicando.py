@@ -26,22 +26,22 @@ class Jogo:
             TAMANHO_DA_JANELA, pygame.SRCALPHA, 32
         )
 
-    def run(self):
+    def executar(self):
         pygame.init()
         self.executando = True
 
         while self.executando:
-            self.processar_entrada_de_usuario()
-            self.atualizar_estado()
-            self.atualizar_graficos()
+            self._processar_entrada_de_usuario()
+            self._atualizar_estado()
+            self._atualizar_graficos()
             self.relogio.tick(30)
 
-    def processar_entrada_de_usuario(self):
+    def _processar_entrada_de_usuario(self):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 self.executando = False
 
-    def atualizar_estado(self):
+    def _atualizar_estado(self):
         self.x = self.x + self.dx
         self.y = self.y + self.dy
 
@@ -50,7 +50,7 @@ class Jogo:
         if self.y < RAIO_DO_CIRCULO or self.y > 300 - RAIO_DO_CIRCULO:
             self.dy = -self.dy
 
-    def atualizar_graficos(self):
+    def _atualizar_graficos(self):
         self.display.fill(COR_DO_BACKGROUND)
         pygame.draw.circle(
             self.display, COR_DO_CIRCULO, (self.x, self.y), RAIO_DO_CIRCULO
@@ -60,4 +60,4 @@ class Jogo:
 
 def executar_logo_quicando():
     game = Jogo()
-    game.run()
+    game.executar()

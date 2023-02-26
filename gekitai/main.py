@@ -59,7 +59,7 @@ def main(argv: Sequence[str] | None = None):
     subparsers.add_parser("logo", help="mostrar logo do gekitai quicando pela tela")
 
     if len(argumentos) == 0:
-        argumentos = ["teste"]
+        argumentos = ["logo"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:

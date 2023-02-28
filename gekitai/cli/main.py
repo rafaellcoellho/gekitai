@@ -1,25 +1,11 @@
 import argparse
 import sys
-from dataclasses import dataclass
+
 from typing import Sequence
 
 from gekitai import __version__
+from gekitai.cli.erros import Erro, ModoNaoImplementado
 from gekitai.pocs.logo_quicando import executar_logo_quicando
-
-
-class Erro(Exception):
-    def __init__(self, mensagem: str, codigo_de_status: int):
-        self.mensagem = mensagem
-        self.codigo_de_status = codigo_de_status
-
-    def __str__(self):
-        return self.mensagem
-
-
-@dataclass
-class ModoNaoImplementado(Erro):
-    mensagem: str = "Modo inválido"
-    codigo_de_status: int = 1
 
 
 def executa_modo(argumentos: argparse.Namespace):

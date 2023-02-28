@@ -1,17 +1,18 @@
 import argparse
 import sys
+
 from typing import Sequence
 
 from gekitai import __version__
+from gekitai.cli.erros import Erro, ModoNaoImplementado
+from gekitai.pocs.logo_quicando import executar_logo_quicando
 
 
-class Erro(Exception):
-    def __init__(self, mensagem: str, codigo_de_status: int):
-        self.mensagem = mensagem
-        self.codigo_de_status = codigo_de_status
-
-    def __str__(self):
-        return self.mensagem
+def executa_modo(argumentos: argparse.Namespace):
+    if argumentos.modo == "logo":
+        executar_logo_quicando()
+    else:
+        raise ModoNaoImplementado
 
 
 def main(argv: Sequence[str] | None = None):
@@ -39,12 +40,16 @@ def main(argv: Sequence[str] | None = None):
         help="mostra ajuda do programa",
     )
 
-    parser_principal.add_argument("modo")
+    subparsers = parser_principal.add_subparsers(dest="modo")
 
+    subparsers.add_parser("logo", help="mostrar logo do gekitai quicando pela tela")
+
+    if len(argumentos) == 0:
+        argumentos = ["logo"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:
-        print(f"modo escolhido: {argumentos_formatados.modo}")
+        executa_modo(argumentos=argumentos_formatados)
     except Erro as erro:
         print(erro.mensagem)
         return erro.codigo_de_status

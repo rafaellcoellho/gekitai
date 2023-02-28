@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: instalar dependências
-        run: python -m pip install --upgrade tox virtualenv setuptools pip
+      - name: instalar dependências para job
+        run: python -m pip install --upgrade virtualenv pip
       - name: instalar dependências de desenvolvimento
         run: pip install -r requirements.txt
       - name: rodar tox

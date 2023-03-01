@@ -17,7 +17,7 @@ def test_erro_ao_tentar_executar_modo_inexistente():
 
 def test_executa_modo_teste_inicial_corretamente():
     with mock.patch("gekitai.cli.main.executa_modo") as modo_executado:
-        codigo_de_status_de_erro = main(["logo"])
+        codigo_de_status_de_erro = main(["exemplo_grafico"])
 
     assert codigo_de_status_de_erro == 0
-    modo_executado.assert_called_once_with(argumentos=Namespace(modo="logo"))
+    modo_executado.assert_called_once_with(argumentos=Namespace(modo="exemplo_grafico"))

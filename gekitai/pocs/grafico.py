@@ -1,9 +1,10 @@
 import pygame
 
 
-def executar_logo_quicando():
+def modo_exemplo_grafico():
     pygame.init()
 
+    pygame.display.set_caption("Exemplo básico dos gráficos")
     largura_da_janela = 800
     altura_da_janela = 600
     janela = pygame.display.set_mode((largura_da_janela, altura_da_janela))

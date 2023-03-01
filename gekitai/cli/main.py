@@ -6,12 +6,12 @@ from typing import Sequence
 from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
 from gekitai.pocs.gui import executar_exemplo_gui_tela_de_jogo
-from gekitai.pocs.logo_quicando import executar_logo_quicando
+from gekitai.pocs.grafico import modo_exemplo_grafico
 
 
 def executa_modo(argumentos: argparse.Namespace):
-    if argumentos.modo == "logo":
-        executar_logo_quicando()
+    if argumentos.modo == "exemplo_grafico":
+        modo_exemplo_grafico()
     elif argumentos.modo == "gui":
         executar_exemplo_gui_tela_de_jogo()
     else:
@@ -45,13 +45,15 @@ def main(argv: Sequence[str] | None = None):
 
     subparsers = parser_principal.add_subparsers(dest="modo")
 
-    subparsers.add_parser("logo", help="mostrar logo do gekitai quicando pela tela")
+    subparsers.add_parser(
+        "exemplo_grafico", help="mostrar logo do gekitai quicando pela tela"
+    )
     subparsers.add_parser(
         "gui", help="mostrar implementação básica do layout da tela de jogo"
     )
 
     if len(argumentos) == 0:
-        argumentos = ["logo"]
+        argumentos = ["exemplo_grafico"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:

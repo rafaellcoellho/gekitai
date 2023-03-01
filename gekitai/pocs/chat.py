@@ -2,10 +2,10 @@ import pygame
 import pygame_gui
 
 
-def executar_exemplo_gui_tela_de_jogo():
+def modo_exemplo_chat():
     pygame.init()
 
-    pygame.display.set_caption("Exemplo GUI da tela de jogo")
+    pygame.display.set_caption("Exemplo de chat")
     janela = pygame.display.set_mode((800, 600))
 
     fundo = pygame.Surface((800, 600))

@@ -1,19 +1,18 @@
 import argparse
 import sys
-
 from typing import Sequence
 
 from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
-from gekitai.pocs.gui import executar_exemplo_gui_tela_de_jogo
+from gekitai.pocs.chat import modo_exemplo_chat
 from gekitai.pocs.grafico import modo_exemplo_grafico
 
 
 def executa_modo(argumentos: argparse.Namespace):
-    if argumentos.modo == "exemplo_grafico":
+    if argumentos.modo == "poc_grafico":
         modo_exemplo_grafico()
-    elif argumentos.modo == "gui":
-        executar_exemplo_gui_tela_de_jogo()
+    elif argumentos.modo == "poc_chat":
+        modo_exemplo_chat()
     else:
         raise ModoNaoImplementado
 
@@ -45,15 +44,14 @@ def main(argv: Sequence[str] | None = None):
 
     subparsers = parser_principal.add_subparsers(dest="modo")
 
+    subparsers.add_parser("poc_grafico", help="mostrar poc de gráfico usando pygame")
     subparsers.add_parser(
-        "exemplo_grafico", help="mostrar logo do gekitai quicando pela tela"
-    )
-    subparsers.add_parser(
-        "gui", help="mostrar implementação básica do layout da tela de jogo"
+        "poc_chat",
+        help="mostrar poc de um chat peer to peer usando pygame, pygame_gui e sockets",
     )
 
     if len(argumentos) == 0:
-        argumentos = ["exemplo_grafico"]
+        argumentos = ["poc_grafico"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:

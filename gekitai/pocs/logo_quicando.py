@@ -1,15 +1,14 @@
 import pygame
 
 
-def modo_exemplo_grafico():
+def executar_logo_quicando():
     pygame.init()
 
-    pygame.display.set_caption("Exemplo básico dos gráficos")
     largura_da_janela = 800
     altura_da_janela = 600
     janela = pygame.display.set_mode((largura_da_janela, altura_da_janela))
 
-    imagem_logo_gekitai = pygame.image.load("assets/logo.png")
+    imagem_logo_gekitai = pygame.image.load("assets/gekitai_logo.png")
     retangulo_da_imagem = imagem_logo_gekitai.get_rect()
 
     pos_x_da_imagem = 0

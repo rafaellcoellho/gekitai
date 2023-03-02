@@ -1,16 +1,21 @@
 import argparse
 import sys
-
 from typing import Sequence
 
 from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
-from gekitai.pocs.logo_quicando import executar_logo_quicando
+from gekitai.pocs.chat import modo_exemplo_chat_servidor, modo_exemplo_chat_cliente
+from gekitai.pocs.grafico import modo_exemplo_grafico
 
 
 def executa_modo(argumentos: argparse.Namespace):
-    if argumentos.modo == "logo":
-        executar_logo_quicando()
+    if argumentos.modo == "poc_grafico":
+        modo_exemplo_grafico()
+    elif argumentos.modo == "poc_chat":
+        if argumentos.papel == "servidor":
+            modo_exemplo_chat_servidor(porta=argumentos.porta)
+        else:
+            modo_exemplo_chat_cliente(ip=argumentos.ip, porta=argumentos.porta)
     else:
         raise ModoNaoImplementado
 
@@ -42,10 +47,33 @@ def main(argv: Sequence[str] | None = None):
 
     subparsers = parser_principal.add_subparsers(dest="modo")
 
-    subparsers.add_parser("logo", help="mostrar logo do gekitai quicando pela tela")
+    # prova de conceito dos gráficos
+    subparsers.add_parser("poc_grafico", help="mostrar poc de gráfico usando pygame")
+
+    # prova de conceito do chat
+    parser_modo_poc_chat = subparsers.add_parser(
+        "poc_chat",
+        help="mostrar poc de um chat peer to peer usando pygame, pygame_gui e sockets",
+    )
+    subparsers_poc_chat = parser_modo_poc_chat.add_subparsers(dest="papel")
+
+    parser_servidor_poc_chat = subparsers_poc_chat.add_parser(
+        "servidor", help="instância chat com papal de servidor"
+    )
+    parser_servidor_poc_chat.add_argument(
+        "porta", help="porta em que o servidor vai escutar clientes se conectando"
+    )
+
+    parser_cliente_poc_chat = subparsers_poc_chat.add_parser(
+        "cliente", help="instância chat com papal de cliente"
+    )
+    parser_cliente_poc_chat.add_argument("ip", help="endereço ip do servidor")
+    parser_cliente_poc_chat.add_argument(
+        "porta", help="porta em que o servidor vai estar escutando"
+    )
 
     if len(argumentos) == 0:
-        argumentos = ["logo"]
+        argumentos = ["poc_grafico"]
     argumentos_formatados = parser_principal.parse_args(argumentos)
 
     try:

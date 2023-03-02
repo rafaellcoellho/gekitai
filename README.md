@@ -36,7 +36,7 @@ $ . venv/bin/activate
 Instalar as dependências de desenvolvimento:
 
 ```
-$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt
 ```
 
 Instalar a configuração do pre-commit:

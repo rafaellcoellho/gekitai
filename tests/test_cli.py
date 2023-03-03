@@ -40,3 +40,11 @@ def test_executa_modo_teste_chat_papel_cliente():
             modo="poc_chat", papel="cliente", ip="127.0.0.1", porta="5555"
         )
     )
+
+
+def test_executa_modo_teste_interface_jogo():
+    with mock.patch("gekitai.cli.main.executa_modo") as modo_executado:
+        codigo_de_status_de_erro = main(["poc_jogo"])
+
+    assert codigo_de_status_de_erro == 0
+    modo_executado.assert_called_once_with(argumentos=Namespace(modo="poc_jogo"))

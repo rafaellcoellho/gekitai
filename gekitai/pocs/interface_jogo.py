@@ -18,6 +18,9 @@ def modo_exemplo_interface_de_jogo():
     imagem_da_peca_jogador_vermelho = pygame.transform.smoothscale(
         pygame.image.load("assets/peca_jogador_vermelho.png"), (80, 80)
     )
+    imagem_borda_status_turno = pygame.transform.smoothscale(
+        pygame.image.load("assets/borda_indicando_status_de_turno.png"), (64, 79)
+    )
 
     tamanho_da_janela = (575, 656)
     janela = pygame.display.set_mode(tamanho_da_janela)
@@ -222,16 +225,12 @@ def modo_exemplo_interface_de_jogo():
             if turno_do_jogador == "azul"
             else retrato_jogador_vermelho
         )
-        pygame.draw.rect(
-            janela,
-            (255, 0, 0),
-            pygame.Rect(
-                retrato_jogador_com_turno_ativo.rect.left - padding,
-                retrato_jogador_com_turno_ativo.rect.top - padding,
-                retrato_jogador_com_turno_ativo.rect.width + 2 * padding,
-                retrato_jogador_com_turno_ativo.rect.height + 2 * padding,
+        janela.blit(
+            imagem_borda_status_turno,
+            (
+                retrato_jogador_com_turno_ativo.rect.left - 5,
+                retrato_jogador_com_turno_ativo.rect.top - 5,
             ),
-            width=2,
         )
 
         pygame.display.update()

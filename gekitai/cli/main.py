@@ -6,6 +6,7 @@ from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
 from gekitai.pocs.chat import modo_exemplo_chat_servidor, modo_exemplo_chat_cliente
 from gekitai.pocs.grafico import modo_exemplo_grafico
+from gekitai.pocs.interface_jogo import modo_exemplo_interface_de_jogo
 
 
 def executa_modo(argumentos: argparse.Namespace):
@@ -16,6 +17,8 @@ def executa_modo(argumentos: argparse.Namespace):
             modo_exemplo_chat_servidor(porta=argumentos.porta)
         else:
             modo_exemplo_chat_cliente(ip=argumentos.ip, porta=argumentos.porta)
+    elif argumentos.modo == "poc_jogo":
+        modo_exemplo_interface_de_jogo()
     else:
         raise ModoNaoImplementado
 
@@ -71,6 +74,9 @@ def main(argv: Sequence[str] | None = None):
     parser_cliente_poc_chat.add_argument(
         "porta", help="porta em que o servidor vai estar escutando"
     )
+
+    # prova de conceito da interface de jogo
+    subparsers.add_parser("poc_jogo", help="mostrar poc da interface de jogo")
 
     if len(argumentos) == 0:
         argumentos = ["poc_grafico"]

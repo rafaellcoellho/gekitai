@@ -5,6 +5,7 @@ import math
 
 def modo_exemplo_interface_de_jogo():
     pygame.init()
+    pygame.display.set_caption("Poc Interface gráfica do jogo")
 
     imagem_do_tabuleiro = pygame.image.load("assets/tabuleiro.png")
     imagem_do_retrato_jogador_azul = pygame.transform.smoothscale(

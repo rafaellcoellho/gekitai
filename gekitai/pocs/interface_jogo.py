@@ -1,5 +1,6 @@
 import pygame
 import pygame_gui
+import math
 
 
 def modo_exemplo_interface_de_jogo():
@@ -28,8 +29,9 @@ def modo_exemplo_interface_de_jogo():
 
     gerenciador_interface_grafica = pygame_gui.UIManager(tamanho_da_janela)
 
+    pos_inicial_tabuleiro = (10, 10)
     interface_de_jogo = pygame_gui.core.UIContainer(
-        relative_rect=pygame.Rect((10, 10), (556, 656)),
+        relative_rect=pygame.Rect(pos_inicial_tabuleiro, (556, 656)),
         manager=gerenciador_interface_grafica,
     )
 
@@ -130,6 +132,7 @@ def modo_exemplo_interface_de_jogo():
         ["vazio", "vazio", "vazio", "vazio", "vazio", "vazio"],
         ["vazio", "vazio", "vazio", "vazio", "vazio", "vazio"],
     ]
+    pecas = []
 
     while True:
         for event in pygame.event.get():
@@ -145,72 +148,90 @@ def modo_exemplo_interface_de_jogo():
                             "vermelho" if turno_do_jogador == "azul" else "azul"
                         )
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                print(pygame.mouse.get_pos())
-                # posicao_do_mouse = pygame.mouse.get_pos()
-                # board_pos = (
-                #     posicao_do_mouse[0] - tabuleiro.rect.x,
-                #     posicao_do_mouse[1] - tabuleiro.rect.y,
-                # )
-                #
-                # linha = board_pos[1] // 100
-                # coluna = board_pos[0] // 100
-                #
-                # if estado_do_tabuleiro[linha][coluna] == "vazio":
-                #     estado_do_tabuleiro[linha][coluna] = "azul"
-                #     pygame_gui.elements.UIImage(
-                #         relative_rect=pygame.Rect(
-                #             ((coluna * 100) + 33, (linha * 100) + 30),
-                #             (
-                #                 imagem_da_peca_jogador_azul.get_width(),
-                #                 imagem_da_peca_jogador_azul.get_height(),
-                #             ),
-                #         ),
-                #         image_surface=imagem_da_peca_jogador_azul,
-                #         manager=tabuleiro.ui_manager,
-                #     )
-                # elif estado_do_tabuleiro[linha][coluna] == "azul":
-                #     estado_do_tabuleiro[linha][coluna] = "vazio"
-                #     for elemento_da_interface in tabuleiro.ui_manager:
-                #         if isinstance(
-                #             elemento_da_interface, pygame_gui.elements.UIImage
-                #         ):
-                #             if elemento_da_interface.rect.collidepoint(
-                #                 posicao_do_mouse
-                #             ):
-                #                 elemento_da_interface.kill()
-            # elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-            # posicao_do_mouse = pygame.mouse.get_pos()
-            # board_pos = (
-            #     posicao_do_mouse[0] - tabuleiro.rect.x,
-            #     posicao_do_mouse[1] - tabuleiro.rect.y,
-            # )
-            #
-            # linha = board_pos[1] // 100
-            # coluna = board_pos[0] // 100
-            #
-            # if estado_do_tabuleiro[linha][coluna] == "vazio":
-            #     estado_do_tabuleiro[linha][coluna] = "vermelho"
-            #     pygame_gui.elements.UIImage(
-            #         relative_rect=pygame.Rect(
-            #             ((coluna * 100) + 50, (linha * 100) + 50),
-            #             (
-            #                 imagem_da_peca_jogador_vermelho.get_width(),
-            #                 imagem_da_peca_jogador_vermelho.get_height(),
-            #             ),
-            #         ),
-            #         image_surface=imagem_da_peca_jogador_vermelho,
-            #         manager=tabuleiro.ui_manager,
-            #     )
-            # elif estado_do_tabuleiro[linha][coluna] == "vermelho":
-            #     estado_do_tabuleiro[linha][coluna] = "vazio"
-            #     for elemento_da_interface in tabuleiro.ui_manager:
-            #         if isinstance(
-            #             elemento_da_interface, pygame_gui.elements.UIImage
-            #         ):
-            #             if elemento_da_interface.rect.collidepoint(
-            #                 posicao_do_mouse
-            #             ):
-            #                 elemento_da_interface.kill()
+                posicao_do_mouse = pygame.mouse.get_pos()
+
+                tamanho_offset_borda_externa = (11, 11)
+                tamanho_offset_borda_interna = (10, 10)
+                lado_quadrados = (87, 87)
+
+                # pos_superior_esquerdo_considerando_borda =
+                pos_superior_esquerdo_considerando_borda = (
+                    pos_inicial_tabuleiro[0]
+                    + tamanho_offset_borda_externa[0]
+                    + tamanho_offset_borda_interna[0]
+                ), (
+                    pos_inicial_tabuleiro[1]
+                    + tamanho_offset_borda_externa[1]
+                    + tamanho_offset_borda_interna[1]
+                )
+                pos_inferior_direito_considerando_borda = (
+                    pos_superior_esquerdo_considerando_borda[0]
+                    + (6 * lado_quadrados[0]),
+                    pos_superior_esquerdo_considerando_borda[1]
+                    + (6 * lado_quadrados[1]),
+                )
+
+                clicou_dentro_do_tabuleiro = (
+                    pos_superior_esquerdo_considerando_borda[0]
+                    <= posicao_do_mouse[0]
+                    <= pos_inferior_direito_considerando_borda[0]
+                    and pos_superior_esquerdo_considerando_borda[1]
+                    <= posicao_do_mouse[1]
+                    <= pos_inferior_direito_considerando_borda[1]
+                )
+
+                if clicou_dentro_do_tabuleiro:
+                    pos_mouse_no_tabuleiro_considerando_borda = (
+                        posicao_do_mouse[0]
+                        - pos_superior_esquerdo_considerando_borda[0],
+                        posicao_do_mouse[1]
+                        - pos_superior_esquerdo_considerando_borda[1],
+                    )
+                    pos_no_tabuleiro = (
+                        math.floor(
+                            pos_mouse_no_tabuleiro_considerando_borda[0]
+                            / lado_quadrados[0]
+                        ),
+                        math.floor(
+                            pos_mouse_no_tabuleiro_considerando_borda[1]
+                            / lado_quadrados[1]
+                        ),
+                    )
+
+                    print(f"posicao_do_mouse={posicao_do_mouse}")
+                    print(f"pos_no_tabuleiro={pos_no_tabuleiro}")
+
+                    linha = pos_no_tabuleiro[1]
+                    coluna = pos_no_tabuleiro[0]
+
+                    if estado_do_tabuleiro[linha][coluna] == "vazio":
+                        estado_do_tabuleiro[linha][coluna] = "azul"
+                        peca_do_tabuleiro = pygame_gui.elements.UIImage(
+                            relative_rect=pygame.Rect(
+                                (
+                                    (coluna * lado_quadrados[0])
+                                    + tamanho_offset_borda_interna[0]
+                                    + tamanho_offset_borda_externa[0],
+                                    (linha * lado_quadrados[1])
+                                    + tamanho_offset_borda_interna[0]
+                                    + tamanho_offset_borda_externa[0],
+                                ),
+                                (
+                                    imagem_da_peca_jogador_azul.get_width(),
+                                    imagem_da_peca_jogador_azul.get_height(),
+                                ),
+                            ),
+                            image_surface=imagem_da_peca_jogador_azul,
+                            manager=gerenciador_interface_grafica,
+                            container=interface_do_tabuleiro,
+                        )
+                        pecas.append(peca_do_tabuleiro)
+                    elif estado_do_tabuleiro[linha][coluna] == "azul":
+                        estado_do_tabuleiro[linha][coluna] = "vazio"
+                        for indice, peca in enumerate(pecas):
+                            if peca.rect.collidepoint(posicao_do_mouse):
+                                peca.kill()
+                                del pecas[indice]
 
             gerenciador_interface_grafica.process_events(event)
 
@@ -219,7 +240,6 @@ def modo_exemplo_interface_de_jogo():
         janela.fill((255, 255, 255))
         gerenciador_interface_grafica.draw_ui(janela)
 
-        padding = 3
         retrato_jogador_com_turno_ativo = (
             retrato_jogador_azul
             if turno_do_jogador == "azul"

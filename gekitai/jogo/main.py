@@ -341,8 +341,9 @@ def main(papel, ip, porta):
                     if evento.ui_element == botao_de_desistir:
                         envia_mensagem_para_jogador_oponente(f"DST")
                         estado_do_jogo["ganhador"] = (
-                            "servidor" if papel == "cliente" else "servidor"
+                            "servidor" if papel == "cliente" else "cliente"
                         )
+                        estado_do_jogo["executando"] = False
                     elif evento.ui_element == botao_de_passar_turno:
                         if (
                             papel == "servidor"

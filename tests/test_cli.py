@@ -48,3 +48,23 @@ def test_executa_modo_teste_interface_jogo():
 
     assert codigo_de_status_de_erro == 0
     modo_executado.assert_called_once_with(argumentos=Namespace(modo="poc_jogo"))
+
+
+def test_executa_modo_jogo_papel_servidor():
+    with mock.patch("gekitai.cli.main.executa_modo") as modo_executado:
+        codigo_de_status_de_erro = main(["jogo", "servidor", "5555"])
+
+    assert codigo_de_status_de_erro == 0
+    modo_executado.assert_called_once_with(
+        argumentos=Namespace(modo="jogo", papel="servidor", porta="5555")
+    )
+
+
+def test_executa_modo_jogo_papel_cliente():
+    with mock.patch("gekitai.cli.main.executa_modo") as modo_executado:
+        codigo_de_status_de_erro = main(["jogo", "cliente", "127.0.0.1", "5555"])
+
+    assert codigo_de_status_de_erro == 0
+    modo_executado.assert_called_once_with(
+        argumentos=Namespace(modo="jogo", papel="cliente", ip="127.0.0.1", porta="5555")
+    )

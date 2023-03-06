@@ -7,31 +7,56 @@ import pygame_gui
 COR_BRANCO = (255, 255, 255)
 COR_PRETO = (0, 0, 0)
 
-LARGURA_DA_JANELA = 600
-ALTURA_DA_JANELA = 400
-
 
 def modo_exemplo_chat_servidor(porta):
     print(f"servidor escutando na porta {porta}")
 
     pygame.init()
+    pygame.display.set_caption("POC chat - servidor")
 
-    janela = pygame.display.set_mode((LARGURA_DA_JANELA, ALTURA_DA_JANELA))
-    interface_do_chat = pygame_gui.UIManager((LARGURA_DA_JANELA, ALTURA_DA_JANELA))
+    tamanho_da_janela = (530, 666)
+    janela = pygame.display.set_mode(tamanho_da_janela)
+    gerenciador_de_interface_grafica = pygame_gui.UIManager(tamanho_da_janela)
 
+    interface_de_chat = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((10, 10), (510, 656)),
+        manager=gerenciador_de_interface_grafica,
+    )
+
+    log_de_mensagens = pygame_gui.elements.UITextBox(
+        relative_rect=pygame.Rect((0, 0), (interface_de_chat.relative_rect.width, 606)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_chat,
+        html_text="",
+    )
+
+    interface_de_entrada_de_texto = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 5), (interface_de_chat.relative_rect.width, 35)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_chat,
+        anchors={
+            "top": "top",
+            "top_target": log_de_mensagens,
+        },
+    )
     entrada_de_texto = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect(50, 350, 400, 25),
-        manager=interface_do_chat,
+        relative_rect=pygame.Rect(
+            (0, 0), (400, interface_de_entrada_de_texto.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_entrada_de_texto,
     )
     botao_de_enviar = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(460, 350, 80, 25),
+        relative_rect=pygame.Rect(
+            (5, 0), (105, interface_de_entrada_de_texto.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_entrada_de_texto,
+        anchors={
+            "left": "left",
+            "left_target": entrada_de_texto,
+        },
         text="Enviar",
-        manager=interface_do_chat,
-    )
-    log_de_mensagens = pygame_gui.elements.UITextBox(
-        html_text="",
-        relative_rect=pygame.Rect(50, 50, 490, 275),
-        manager=interface_do_chat,
     )
 
     seletores = selectors.DefaultSelector()
@@ -49,7 +74,7 @@ def modo_exemplo_chat_servidor(porta):
         if dados_recebidos_pela_rede:
             mensagem_recebida = dados_recebidos_pela_rede.decode("utf-8")
             log_de_mensagens.append_html_text(
-                f'<font color="blue">cliente:</font> {mensagem_recebida}<br>'
+                f"<font color=#C65454>cliente:</font> {mensagem_recebida}<br>"
             )
         else:
             seletores.unregister(file_descriptor_socket_cliente)
@@ -103,18 +128,18 @@ def modo_exemplo_chat_servidor(porta):
                         if mensagem_para_enviar:
                             entrada_de_texto.set_text("")
                             log_de_mensagens.append_html_text(
-                                f'<font color="black">servidor:</font> {mensagem_para_enviar}<br>'
+                                f"<font color=#46B8F7>servidor:</font> {mensagem_para_enviar}<br>"
                             )
                             sockets_conectados[0].sendall(
                                 str.encode(f"{mensagem_para_enviar}")
                             )
 
-            interface_do_chat.process_events(evento)
+            gerenciador_de_interface_grafica.process_events(evento)
 
-        interface_do_chat.update(clock.tick(60) / 1000.0)
+        gerenciador_de_interface_grafica.update(clock.tick(60) / 1000.0)
 
         janela.fill(COR_BRANCO)
-        interface_do_chat.draw_ui(janela)
+        gerenciador_de_interface_grafica.draw_ui(janela)
         pygame.display.update()
 
 
@@ -122,23 +147,51 @@ def modo_exemplo_chat_cliente(ip, porta):
     print(f"conectando no servidor no endereço {ip} na porta {porta}")
 
     pygame.init()
+    pygame.display.set_caption("POC chat - cliente")
 
-    janela = pygame.display.set_mode((LARGURA_DA_JANELA, ALTURA_DA_JANELA))
-    interface_do_chat = pygame_gui.UIManager((LARGURA_DA_JANELA, ALTURA_DA_JANELA))
+    tamanho_da_janela = (530, 666)
+    janela = pygame.display.set_mode(tamanho_da_janela)
+    gerenciador_de_interface_grafica = pygame_gui.UIManager(tamanho_da_janela)
 
+    interface_de_chat = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((10, 10), (510, 656)),
+        manager=gerenciador_de_interface_grafica,
+    )
+
+    log_de_mensagens = pygame_gui.elements.UITextBox(
+        relative_rect=pygame.Rect((0, 0), (interface_de_chat.relative_rect.width, 606)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_chat,
+        html_text="",
+    )
+
+    interface_de_entrada_de_texto = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 5), (interface_de_chat.relative_rect.width, 35)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_chat,
+        anchors={
+            "top": "top",
+            "top_target": log_de_mensagens,
+        },
+    )
     entrada_de_texto = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect(50, 350, 400, 25),
-        manager=interface_do_chat,
+        relative_rect=pygame.Rect(
+            (0, 0), (400, interface_de_entrada_de_texto.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_entrada_de_texto,
     )
     botao_de_enviar = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(460, 350, 80, 25),
+        relative_rect=pygame.Rect(
+            (5, 0), (105, interface_de_entrada_de_texto.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_de_entrada_de_texto,
+        anchors={
+            "left": "left",
+            "left_target": entrada_de_texto,
+        },
         text="Enviar",
-        manager=interface_do_chat,
-    )
-    log_de_mensagens = pygame_gui.elements.UITextBox(
-        html_text="",
-        relative_rect=pygame.Rect(50, 50, 490, 275),
-        manager=interface_do_chat,
     )
 
     seletores = selectors.DefaultSelector()
@@ -150,7 +203,7 @@ def modo_exemplo_chat_cliente(ip, porta):
         dados_recebidos_pela_rede = socket_cliente.recv(1024)
         mensagem_recebida = dados_recebidos_pela_rede.decode("utf-8")
         log_de_mensagens.append_html_text(
-            f'<font color="black">servidor:</font> {mensagem_recebida}<br>'
+            f"<font color=#46B8F7>servidor:</font> {mensagem_recebida}<br>"
         )
 
         socket_cliente.setblocking(False)
@@ -168,7 +221,7 @@ def modo_exemplo_chat_cliente(ip, porta):
                 dados_recebidos_pela_rede_do_servidor.decode("utf-8")
             )
             log_de_mensagens.append_html_text(
-                f'<font color="black">servidor:</font> {mensagem_recebida_do_servidor}<br>'
+                f"<font color=#46B8F7>servidor:</font> {mensagem_recebida_do_servidor}<br>"
             )
         else:
             seletores.unregister(file_descriptor_socket_cliente)
@@ -207,14 +260,14 @@ def modo_exemplo_chat_cliente(ip, porta):
                         if mensagem_para_enviar:
                             entrada_de_texto.set_text("")
                             log_de_mensagens.append_html_text(
-                                f'<font color="blue">cliente:</font> {mensagem_para_enviar}<br>'
+                                f"<font color=#C65454>cliente:</font> {mensagem_para_enviar}<br>"
                             )
                             socket_cliente.send(str.encode(f"{mensagem_para_enviar}"))
 
-            interface_do_chat.process_events(evento)
+            gerenciador_de_interface_grafica.process_events(evento)
 
-        interface_do_chat.update(clock.tick(60) / 1000.0)
+        gerenciador_de_interface_grafica.update(clock.tick(60) / 1000.0)
 
         janela.fill(COR_BRANCO)
-        interface_do_chat.draw_ui(janela)
+        gerenciador_de_interface_grafica.draw_ui(janela)
         pygame.display.update()

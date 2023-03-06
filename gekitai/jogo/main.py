@@ -1,11 +1,16 @@
 import pygame
 import pygame_gui
+import selectors
+import socket
+import threading
 
 
 def main(papel, ip, porta):
     # constantes
     tamanho_da_janela = (936, 655)
     cor_de_fundo = (255, 255, 255)
+    identificacao_do_servidor_no_chat = "<font color=#46B8F7>servidor</font>"
+    identificacao_do_cliente_no_chat = "<font color=#C65454>cliente</font>"
 
     # estado inicial do jogo
     turno_do_jogador = "azul"
@@ -179,6 +184,95 @@ def main(papel, ip, porta):
         text="Enviar",
     )
 
+    # inicia interface de rede
+    seletores = selectors.DefaultSelector()
+    sockets_conectados = []
+
+    instancia_do_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    if papel == "servidor":
+        instancia_do_socket.setblocking(False)
+        instancia_do_socket.bind(("127.0.0.1", int(porta)))
+        instancia_do_socket.listen(1)
+
+        def recebe_dados_do_cliente(file_descriptor_socket_cliente):
+            dados_recebidos_pela_rede = file_descriptor_socket_cliente.recv(1024)
+
+            if dados_recebidos_pela_rede:
+                mensagem_recebida = dados_recebidos_pela_rede.decode("utf-8")
+                log_de_mensagens.append_html_text(
+                    f"{identificacao_do_cliente_no_chat}: {mensagem_recebida}<br>"
+                )
+            else:
+                seletores.unregister(file_descriptor_socket_cliente)
+                file_descriptor_socket_cliente.close()
+                sockets_conectados.clear()
+
+        def inicia_conexao_com_cliente(file_descriptor_socket_servidor):
+            socket_do_cliente_conectado, _ = file_descriptor_socket_servidor.accept()
+            socket_do_cliente_conectado.setblocking(False)
+
+            sockets_conectados.append(socket_do_cliente_conectado)
+
+            seletores.register(
+                socket_do_cliente_conectado,
+                selectors.EVENT_READ,
+                data=recebe_dados_do_cliente,
+            )
+
+        seletores.register(
+            instancia_do_socket, selectors.EVENT_READ, data=inicia_conexao_com_cliente
+        )
+    elif papel == "cliente":
+        try:
+            instancia_do_socket.connect((ip, int(porta)))
+            instancia_do_socket.setblocking(False)
+        except OSError as msg:
+            instancia_do_socket.close()
+            print(msg)
+            return
+
+        def recebe_dados_do_servidor(file_descriptor_socket_cliente):
+            dados_recebidos_pela_rede_do_servidor = file_descriptor_socket_cliente.recv(
+                1024
+            )
+
+            if dados_recebidos_pela_rede_do_servidor:
+                mensagem_recebida_do_servidor = (
+                    dados_recebidos_pela_rede_do_servidor.decode("utf-8")
+                )
+                log_de_mensagens.append_html_text(
+                    f"{identificacao_do_servidor_no_chat}: {mensagem_recebida_do_servidor}<br>"
+                )
+            else:
+                seletores.unregister(file_descriptor_socket_cliente)
+                file_descriptor_socket_cliente.close()
+
+        seletores.register(
+            instancia_do_socket, selectors.EVENT_READ, data=recebe_dados_do_servidor
+        )
+    else:
+        print("papel na rede invalido")
+        return
+
+    # inicia thread escutando por mensagens da rede
+    def loop_escutando_mensagens_dos_seletores():
+        try:
+            while True:
+                eventos = seletores.select()
+                for key, _ in eventos:
+                    funcao_para_tratar_evento = key.data
+                    funcao_para_tratar_evento(key.fileobj)
+        except KeyboardInterrupt:
+            instancia_do_socket.close()
+            seletores.close()
+            sockets_conectados.clear()
+
+    thread_escutando_mensagens_dos_seletores = threading.Thread(
+        target=loop_escutando_mensagens_dos_seletores, daemon=True
+    )
+    thread_escutando_mensagens_dos_seletores.start()
+
     # relogio do jogo
     relogio = pygame.time.Clock()
 
@@ -189,6 +283,32 @@ def main(papel, ip, porta):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 return
+            if evento.type == pygame.USEREVENT:
+                if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if evento.ui_element == botao_de_enviar:
+                        mensagem_para_enviar = entrada_de_texto.get_text()
+                        if mensagem_para_enviar:
+                            entrada_de_texto.set_text("")
+                            identificacao_jogador_no_chat = (
+                                identificacao_do_servidor_no_chat
+                                if papel == "servidor"
+                                else identificacao_do_cliente_no_chat
+                            )
+                            log_de_mensagens.append_html_text(
+                                f"{identificacao_jogador_no_chat}: {mensagem_para_enviar}<br>"
+                            )
+
+                            if papel == "servidor":
+                                sockets_conectados[0].sendall(
+                                    str.encode(f"{mensagem_para_enviar}")
+                                )
+                            elif papel == "cliente":
+                                instancia_do_socket.send(
+                                    str.encode(f"{mensagem_para_enviar}")
+                                )
+                            else:
+                                print("papel na rede invalido")
+                                return
 
             gerenciador_de_interface_grafica.process_events(evento)
 

@@ -4,6 +4,7 @@ from typing import Sequence
 
 from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
+from gekitai.jogo.main import main as modo_jogo
 from gekitai.pocs.chat import modo_exemplo_chat_servidor, modo_exemplo_chat_cliente
 from gekitai.pocs.grafico import modo_exemplo_grafico
 from gekitai.pocs.interface_jogo import modo_exemplo_interface_de_jogo
@@ -19,6 +20,12 @@ def executa_modo(argumentos: argparse.Namespace):
             modo_exemplo_chat_cliente(ip=argumentos.ip, porta=argumentos.porta)
     elif argumentos.modo == "poc_jogo":
         modo_exemplo_interface_de_jogo()
+    elif argumentos.modo == "jogo":
+        modo_jogo(
+            papel=argumentos.papel,
+            ip=argumentos.ip if argumentos.papel == "cliente" else "127.0.0.1",
+            porta=argumentos.porta,
+        )
     else:
         raise ModoNaoImplementado
 
@@ -77,6 +84,25 @@ def main(argv: Sequence[str] | None = None):
 
     # prova de conceito da interface de jogo
     subparsers.add_parser("poc_jogo", help="mostrar poc da interface de jogo")
+
+    # interface do jogo (ainda sem menu)
+    parser_modo_jogo = subparsers.add_parser("jogo", help="executa o jogo")
+    subparsers_poc_chat = parser_modo_jogo.add_subparsers(dest="papel")
+
+    parser_servidor_jogo = subparsers_poc_chat.add_parser(
+        "servidor", help="instância jogo servidor"
+    )
+    parser_servidor_jogo.add_argument(
+        "porta", help="servidor usará essa porta para escutar cliente"
+    )
+
+    parser_cliente_jogo = subparsers_poc_chat.add_parser(
+        "cliente", help="instância jogo cliente"
+    )
+    parser_cliente_jogo.add_argument("ip", help="endereço ip do jogo servidor")
+    parser_cliente_jogo.add_argument(
+        "porta", help="conecta nessa porta para iniciar comunicação com servidor"
+    )
 
     if len(argumentos) == 0:
         argumentos = ["poc_grafico"]

@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 
 
-def main(papel, ip, porta):
+def main():
     # constantes
     tamanho_da_janela = (936, 655)
     cor_de_fundo = (0, 0, 0)
@@ -81,7 +81,7 @@ def main(papel, ip, porta):
 
     # inicia pygame e gerenciador de interface
     pygame.init()
-    pygame.display.set_caption(f"Gekitai | {papel} ({ip}:{porta})")
+    pygame.display.set_caption(f"Gekitai")
     janela = pygame.display.set_mode(tamanho_da_janela)
     gerenciador_de_interface_grafica = pygame_gui.UIManager(tamanho_da_janela)
 
@@ -337,11 +337,11 @@ def main(papel, ip, porta):
     texto_de_fim_de_jogo = pygame_gui.elements.UILabel(
         relative_rect=pygame.Rect((0, 0), (200, 200)),
         manager=gerenciador_de_interface_grafica,
-        container=interface_de_espera_por_conexao,
+        container=interface_de_fim_de_jogo,
         anchors={
             "center": "center",
         },
-        text="",
+        text="oi",
     )
 
     # cria estado das telas do jogo
@@ -395,153 +395,15 @@ def main(papel, ip, porta):
     # inicia interface de rede
     seletores = selectors.DefaultSelector()
     sockets_conectados = []
-
     instancia_do_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    if papel == "servidor":
-        instancia_do_socket.setblocking(False)
-        instancia_do_socket.bind(("127.0.0.1", int(porta)))
-        instancia_do_socket.listen(1)
-
-        def recebe_dados_do_cliente(file_descriptor_socket_cliente):
-            dados_recebidos_pela_rede = file_descriptor_socket_cliente.recv(1024)
-
-            if dados_recebidos_pela_rede:
-                mensagem_recebida = dados_recebidos_pela_rede.decode("utf-8")
-                if mensagem_recebida == "DST":
-                    estado_do_jogo["ganhador"] = "servidor"
-                elif mensagem_recebida == "PAS":
-                    estado_do_jogo["turno_do_jogador"] = "servidor"
-                elif parser_do_comando_criar_peca.match(mensagem_recebida):
-                    inserir_peca_no_tabuleiro(
-                        linha_alvo=int(mensagem_recebida[8]),
-                        coluna_alvo=int(mensagem_recebida[5]),
-                        peca_alvo="servidor"
-                        if int(mensagem_recebida[11]) == 0
-                        else "cliente",
-                    )
-                elif parser_do_comando_remover_peca.match(mensagem_recebida):
-                    (
-                        linha_alvo,
-                        coluna_alvo,
-                        posicao_do_mouse_x,
-                        posicao_do_mouse_y,
-                    ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
-                        1, 2, 3, 4
-                    )
-                    remover_peca_no_tabuleiro(
-                        linha_alvo=int(linha_alvo),
-                        coluna_alvo=int(coluna_alvo),
-                        ponto_do_clique=(
-                            int(posicao_do_mouse_x),
-                            int(posicao_do_mouse_y),
-                        ),
-                    )
-                elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
-                    conteudo = mensagem_recebida[4:]
-                    log_de_mensagens.append_html_text(
-                        f"{identificacao_do_cliente_no_chat}: {conteudo}<br>"
-                    )
-            else:
-                seletores.unregister(file_descriptor_socket_cliente)
-                file_descriptor_socket_cliente.close()
-                sockets_conectados.clear()
-
-        def inicia_conexao_com_cliente(file_descriptor_socket_servidor):
-            socket_do_cliente_conectado, _ = file_descriptor_socket_servidor.accept()
-            socket_do_cliente_conectado.setblocking(False)
-
-            sockets_conectados.append(socket_do_cliente_conectado)
-
-            seletores.register(
-                socket_do_cliente_conectado,
-                selectors.EVENT_READ,
-                data=recebe_dados_do_cliente,
-            )
-
-        seletores.register(
-            instancia_do_socket, selectors.EVENT_READ, data=inicia_conexao_com_cliente
-        )
-    elif papel == "cliente":
-        try:
-            instancia_do_socket.connect((ip, int(porta)))
-            instancia_do_socket.setblocking(False)
-        except OSError as msg:
-            instancia_do_socket.close()
-            print(msg)
-            return
-
-        def recebe_dados_do_servidor(file_descriptor_socket_cliente):
-            dados_recebidos_pela_rede_do_servidor = file_descriptor_socket_cliente.recv(
-                1024
-            )
-
-            if dados_recebidos_pela_rede_do_servidor:
-                mensagem_recebida_do_servidor = (
-                    dados_recebidos_pela_rede_do_servidor.decode("utf-8")
-                )
-                if mensagem_recebida_do_servidor == "DST":
-                    estado_do_jogo["ganhador"] = "cliente"
-                    estado_do_jogo["executando"] = False
-                elif mensagem_recebida_do_servidor == "PAS":
-                    estado_do_jogo["turno_do_jogador"] = "cliente"
-                elif parser_do_comando_criar_peca.match(mensagem_recebida_do_servidor):
-                    inserir_peca_no_tabuleiro(
-                        linha_alvo=int(mensagem_recebida_do_servidor[8]),
-                        coluna_alvo=int(mensagem_recebida_do_servidor[5]),
-                        peca_alvo="servidor"
-                        if int(mensagem_recebida_do_servidor[11]) == 0
-                        else "cliente",
-                    )
-                elif parser_do_comando_remover_peca.match(
-                    mensagem_recebida_do_servidor
-                ):
-                    (
-                        linha_alvo,
-                        coluna_alvo,
-                        posicao_do_mouse_x,
-                        posicao_do_mouse_y,
-                    ) = parser_do_comando_remover_peca.match(
-                        mensagem_recebida_do_servidor
-                    ).group(
-                        1, 2, 3, 4
-                    )
-                    remover_peca_no_tabuleiro(
-                        linha_alvo=int(linha_alvo),
-                        coluna_alvo=int(coluna_alvo),
-                        ponto_do_clique=(
-                            int(posicao_do_mouse_x),
-                            int(posicao_do_mouse_y),
-                        ),
-                    )
-                elif parser_do_comando_mensagem_do_chat.match(
-                    mensagem_recebida_do_servidor
-                ):
-                    conteudo = mensagem_recebida_do_servidor[4:]
-                    log_de_mensagens.append_html_text(
-                        f"{identificacao_do_servidor_no_chat}: {conteudo}<br>"
-                    )
-            else:
-                seletores.unregister(file_descriptor_socket_cliente)
-                file_descriptor_socket_cliente.close()
-
-        seletores.register(
-            instancia_do_socket, selectors.EVENT_READ, data=recebe_dados_do_servidor
-        )
-    else:
-        print("papel na rede invalido")
-        return
-
     def envia_mensagem_para_jogador_oponente(mensagem):
-        if papel == "servidor":
+        if estado_da_conexao["papel"] == "servidor":
             sockets_conectados[0].sendall(str.encode(f"{mensagem}"))
-        elif papel == "cliente":
-            instancia_do_socket.send(str.encode(f"{mensagem}"))
         else:
-            print("papel na rede invalido")
-            return
+            instancia_do_socket.send(str.encode(f"{mensagem}"))
 
-    # inicia thread escutando por mensagens da rede
+    # função que escuta mensagens da rede
     def loop_escutando_mensagens_dos_seletores():
         try:
             while True:
@@ -553,11 +415,6 @@ def main(papel, ip, porta):
             instancia_do_socket.close()
             seletores.close()
             sockets_conectados.clear()
-
-    thread_escutando_mensagens_dos_seletores = threading.Thread(
-        target=loop_escutando_mensagens_dos_seletores, daemon=True
-    )
-    thread_escutando_mensagens_dos_seletores.start()
 
     # relogio do jogo
     relogio = pygame.time.Clock()
@@ -573,19 +430,215 @@ def main(papel, ip, porta):
                 if estado_da_tela["atual"] == "inicial":
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_criar_partida_como_servidor:
+                            estado_da_conexao["papel"] = "servidor"
                             estado_da_conexao["ip"] = entrada_ip.get_text()
                             estado_da_conexao["porta"] = entrada_porta.get_text()
+
+                            instancia_do_socket.setblocking(False)
+                            instancia_do_socket.bind(
+                                ("127.0.0.1", int(estado_da_conexao["porta"]))
+                            )
+                            instancia_do_socket.listen(1)
+
+                            def recebe_dados_do_cliente(file_descriptor_socket_cliente):
+                                dados_recebidos_pela_rede = (
+                                    file_descriptor_socket_cliente.recv(1024)
+                                )
+
+                                if dados_recebidos_pela_rede:
+                                    mensagem_recebida = (
+                                        dados_recebidos_pela_rede.decode("utf-8")
+                                    )
+                                    if mensagem_recebida == "DST":
+                                        estado_do_jogo["ganhador"] = "servidor"
+                                        texto_de_fim_de_jogo.set_text(
+                                            f"Ganhador: {estado_do_jogo['ganhador']}"
+                                        )
+                                        estado_da_tela["atual"] = "fim"
+                                    elif mensagem_recebida == "PAS":
+                                        estado_do_jogo["turno_do_jogador"] = "servidor"
+                                    elif parser_do_comando_criar_peca.match(
+                                        mensagem_recebida
+                                    ):
+                                        inserir_peca_no_tabuleiro(
+                                            linha_alvo=int(mensagem_recebida[8]),
+                                            coluna_alvo=int(mensagem_recebida[5]),
+                                            peca_alvo="servidor"
+                                            if int(mensagem_recebida[11]) == 0
+                                            else "cliente",
+                                        )
+                                    elif parser_do_comando_remover_peca.match(
+                                        mensagem_recebida
+                                    ):
+                                        (
+                                            linha_alvo,
+                                            coluna_alvo,
+                                            posicao_do_mouse_x,
+                                            posicao_do_mouse_y,
+                                        ) = parser_do_comando_remover_peca.match(
+                                            mensagem_recebida
+                                        ).group(
+                                            1, 2, 3, 4
+                                        )
+                                        remover_peca_no_tabuleiro(
+                                            linha_alvo=int(linha_alvo),
+                                            coluna_alvo=int(coluna_alvo),
+                                            ponto_do_clique=(
+                                                int(posicao_do_mouse_x),
+                                                int(posicao_do_mouse_y),
+                                            ),
+                                        )
+                                    elif parser_do_comando_mensagem_do_chat.match(
+                                        mensagem_recebida
+                                    ):
+                                        conteudo = mensagem_recebida[4:]
+                                        log_de_mensagens.append_html_text(
+                                            f"{identificacao_do_cliente_no_chat}: {conteudo}<br>"
+                                        )
+                                else:
+                                    seletores.unregister(file_descriptor_socket_cliente)
+                                    file_descriptor_socket_cliente.close()
+                                    sockets_conectados.clear()
+
+                            def inicia_conexao_com_cliente(
+                                file_descriptor_socket_servidor,
+                            ):
+                                (
+                                    socket_do_cliente_conectado,
+                                    _,
+                                ) = file_descriptor_socket_servidor.accept()
+                                socket_do_cliente_conectado.setblocking(False)
+
+                                sockets_conectados.append(socket_do_cliente_conectado)
+
+                                seletores.register(
+                                    socket_do_cliente_conectado,
+                                    selectors.EVENT_READ,
+                                    data=recebe_dados_do_cliente,
+                                )
+
+                                estado_da_tela["atual"] = "jogo"
+
+                            seletores.register(
+                                instancia_do_socket,
+                                selectors.EVENT_READ,
+                                data=inicia_conexao_com_cliente,
+                            )
+
+                            thread_escutando_mensagens_dos_seletores = threading.Thread(
+                                target=loop_escutando_mensagens_dos_seletores,
+                                daemon=True,
+                            )
+                            thread_escutando_mensagens_dos_seletores.start()
+
                             estado_da_tela["atual"] = "esperando_conexao"
                         elif evento.ui_element == botao_entrar_em_partida_como_cliente:
+                            estado_da_conexao["papel"] = "cliente"
                             estado_da_conexao["ip"] = entrada_ip.get_text()
                             estado_da_conexao["porta"] = entrada_porta.get_text()
+
+                            try:
+                                instancia_do_socket.connect(
+                                    (
+                                        estado_da_conexao["ip"],
+                                        int(estado_da_conexao["porta"]),
+                                    )
+                                )
+                                instancia_do_socket.setblocking(False)
+                            except OSError as msg:
+                                instancia_do_socket.close()
+                                print(msg)
+                                return
+
+                            def recebe_dados_do_servidor(
+                                file_descriptor_socket_cliente,
+                            ):
+                                dados_recebidos_pela_rede_do_servidor = (
+                                    file_descriptor_socket_cliente.recv(1024)
+                                )
+
+                                if dados_recebidos_pela_rede_do_servidor:
+                                    mensagem_recebida_do_servidor = (
+                                        dados_recebidos_pela_rede_do_servidor.decode(
+                                            "utf-8"
+                                        )
+                                    )
+                                    if mensagem_recebida_do_servidor == "DST":
+                                        estado_do_jogo["ganhador"] = "cliente"
+                                        texto_de_fim_de_jogo.set_text(
+                                            f"Ganhador: {estado_do_jogo['ganhador']}"
+                                        )
+                                        estado_da_tela["atual"] = "fim"
+                                    elif mensagem_recebida_do_servidor == "PAS":
+                                        estado_do_jogo["turno_do_jogador"] = "cliente"
+                                    elif parser_do_comando_criar_peca.match(
+                                        mensagem_recebida_do_servidor
+                                    ):
+                                        inserir_peca_no_tabuleiro(
+                                            linha_alvo=int(
+                                                mensagem_recebida_do_servidor[8]
+                                            ),
+                                            coluna_alvo=int(
+                                                mensagem_recebida_do_servidor[5]
+                                            ),
+                                            peca_alvo="servidor"
+                                            if int(mensagem_recebida_do_servidor[11])
+                                            == 0
+                                            else "cliente",
+                                        )
+                                    elif parser_do_comando_remover_peca.match(
+                                        mensagem_recebida_do_servidor
+                                    ):
+                                        (
+                                            linha_alvo,
+                                            coluna_alvo,
+                                            posicao_do_mouse_x,
+                                            posicao_do_mouse_y,
+                                        ) = parser_do_comando_remover_peca.match(
+                                            mensagem_recebida_do_servidor
+                                        ).group(
+                                            1, 2, 3, 4
+                                        )
+                                        remover_peca_no_tabuleiro(
+                                            linha_alvo=int(linha_alvo),
+                                            coluna_alvo=int(coluna_alvo),
+                                            ponto_do_clique=(
+                                                int(posicao_do_mouse_x),
+                                                int(posicao_do_mouse_y),
+                                            ),
+                                        )
+                                    elif parser_do_comando_mensagem_do_chat.match(
+                                        mensagem_recebida_do_servidor
+                                    ):
+                                        conteudo = mensagem_recebida_do_servidor[4:]
+                                        log_de_mensagens.append_html_text(
+                                            f"{identificacao_do_servidor_no_chat}: {conteudo}<br>"
+                                        )
+                                else:
+                                    seletores.unregister(file_descriptor_socket_cliente)
+                                    file_descriptor_socket_cliente.close()
+
+                            seletores.register(
+                                instancia_do_socket,
+                                selectors.EVENT_READ,
+                                data=recebe_dados_do_servidor,
+                            )
+
+                            thread_escutando_mensagens_dos_seletores = threading.Thread(
+                                target=loop_escutando_mensagens_dos_seletores,
+                                daemon=True,
+                            )
+                            thread_escutando_mensagens_dos_seletores.start()
+
                             estado_da_tela["atual"] = "jogo"
                 if estado_da_tela["atual"] == "jogo":
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_de_desistir:
                             envia_mensagem_para_jogador_oponente(f"DST")
                             estado_do_jogo["ganhador"] = (
-                                "servidor" if papel == "cliente" else "cliente"
+                                "servidor"
+                                if estado_da_conexao["papel"] == "cliente"
+                                else "cliente"
                             )
                             texto_de_fim_de_jogo.set_text(
                                 f"Ganhador: {estado_do_jogo['ganhador']}"
@@ -593,13 +646,13 @@ def main(papel, ip, porta):
                             estado_da_tela["atual"] = "fim"
                         elif evento.ui_element == botao_de_passar_turno:
                             if (
-                                papel == "servidor"
+                                estado_da_conexao["papel"] == "servidor"
                                 and estado_do_jogo["turno_do_jogador"] == "servidor"
                             ):
                                 envia_mensagem_para_jogador_oponente(f"PAS")
                                 estado_do_jogo["turno_do_jogador"] = "cliente"
                             elif (
-                                papel == "cliente"
+                                estado_da_conexao["papel"] == "cliente"
                                 and estado_do_jogo["turno_do_jogador"] == "cliente"
                             ):
                                 envia_mensagem_para_jogador_oponente(f"PAS")
@@ -610,7 +663,7 @@ def main(papel, ip, porta):
                                 entrada_de_texto.set_text("")
                                 identificacao_jogador_no_chat = (
                                     identificacao_do_servidor_no_chat
-                                    if papel == "servidor"
+                                    if estado_da_conexao["papel"] == "servidor"
                                     else identificacao_do_cliente_no_chat
                                 )
                                 log_de_mensagens.append_html_text(
@@ -621,7 +674,7 @@ def main(papel, ip, porta):
                                 )
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 if estado_da_tela["atual"] == "jogo":
-                    if estado_do_jogo["turno_do_jogador"] == papel:
+                    if estado_do_jogo["turno_do_jogador"] == estado_da_conexao["papel"]:
                         posicao_do_mouse = pygame.mouse.get_pos()
 
                         clicou_dentro_do_tabuleiro = (
@@ -658,9 +711,11 @@ def main(papel, ip, porta):
                                 estado_do_jogo["estado_do_tabuleiro"][linha][coluna]
                                 == "vazio"
                             ):
-                                jogador = papel
+                                jogador = estado_da_conexao["papel"]
                                 oponente = (
-                                    "cliente" if papel == "servidor" else "servidor"
+                                    "cliente"
+                                    if estado_da_conexao["papel"] == "servidor"
+                                    else "servidor"
                                 )
                                 peca_que_vai_interagir = (
                                     jogador if evento.button == 1 else oponente

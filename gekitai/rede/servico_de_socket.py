@@ -6,7 +6,6 @@ from typing import Optional, Callable
 from gekitai.rede.servicos_de_rede import (
     ServicoDeRede,
     InformacaoDeConexao,
-    FuncaoExecutadaAoReceberMensagem,
 )
 
 
@@ -20,10 +19,12 @@ class ServicoDeSocket(ServicoDeRede):
         self.seletores: DefaultSelector = DefaultSelector()
         self.socket: socket = socket(AF_INET, SOCK_STREAM)
         self.socket_conectado_ao_cliente: Optional[socket] = None
-        self.ao_receber_mensagem: Optional[FuncaoExecutadaAoReceberMensagem] = None
+        self.ao_receber_mensagem: Optional[Callable] = None
+        self.ao_conectar: Optional[Callable] = None
 
-    def iniciar(self, ao_receber_mensagem: FuncaoExecutadaAoReceberMensagem):
+    def iniciar(self, ao_receber_mensagem: Callable, ao_conectar: Optional[Callable]):
         self.ao_receber_mensagem = ao_receber_mensagem
+        self.ao_conectar = ao_conectar
 
         if self.eh_anfitriao:
             self.socket.setblocking(False)
@@ -75,12 +76,14 @@ class ServicoDeSocket(ServicoDeRede):
             EVENT_READ,
             data=self._ao_receber_dados,
         )
+        if self.ao_conectar:
+            self.ao_conectar()
 
     def _ao_receber_dados(self, socket_cliente):
         dados_recebidos: bytes = socket_cliente.recv(1024)
         if dados_recebidos:
             mensagem_recebida = dados_recebidos.decode("utf-8")
-            self.ao_receber_mensagem(mensagem=mensagem_recebida)
+            self.ao_receber_mensagem(mensagem_recebida)
         else:
             self.encerrar()
 

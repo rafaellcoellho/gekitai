@@ -1,12 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from collections.abc import Callable
-
-
-class FuncaoExecutadaAoReceberMensagem(ABC):
-    @abstractmethod
-    def __call__(self, mensagem: str) -> None:
-        pass
+from typing import Callable, Optional
 
 
 @dataclass
@@ -21,7 +15,7 @@ class ServicoDeRede(ABC):
         self.eh_anfitriao: bool = eh_anfitriao
 
     @abstractmethod
-    def iniciar(self, ao_receber_mensagens: FuncaoExecutadaAoReceberMensagem):
+    def iniciar(self, ao_receber_mensagens: Callable, ao_conectar: Optional[Callable]):
         pass
 
     @abstractmethod

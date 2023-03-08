@@ -13,7 +13,7 @@ from gekitai.rede.servicos_de_rede import InformacaoDeConexao
 def main():
     # constantes
     tamanho_da_janela = (936, 655)
-    cor_de_fundo = (0, 0, 0)
+    cor_de_fundo = (49, 46, 43)
 
     identificacao_do_servidor_no_chat = "<font color=#46B8F7>servidor</font>"
     identificacao_do_cliente_no_chat = "<font color=#C65454>cliente</font>"

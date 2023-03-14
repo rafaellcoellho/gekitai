@@ -61,17 +61,7 @@ tox -e py310 -- tests/test_main.py::test_inicial
 
 #### Como instalar
 
-Construir os pacotes usando build:
-
-```
-python -m build
-```
-
-Instalar o pacote usando pip:
-
-```
-pip install dist/gekitai/gekitai-0.0.1.whl
-```
+TODO
 
 ## Referências
 

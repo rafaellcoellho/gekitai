@@ -12,10 +12,10 @@ jobs:
       - uses: actions/setup-python@v2
 
       - name: instalar dependências
-        run: python -m pip install --upgrade virtualenv setuptools build pip
+        run: python -m pip install --upgrade pyinstaller pip
 
       - name: fazer build do app
-        run: python -m build
+        run: pyinstaller gekitai.spec
 
       - name: obter versão
         run: echo "VERSAO=$(grep -Po '\d.\d.\d' gekitai/__version__.py)" >> $GITHUB_ENV

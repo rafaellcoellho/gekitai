@@ -1,10 +1,12 @@
 import math
 import re
+from pathlib import Path
 from typing import Optional
 
 import pygame
 import pygame_gui
 
+from gekitai.libs.assets import obter_caminho_para_pasta_de_assets
 from gekitai.rede.controlador_de_rede import ControladorDeRede
 from gekitai.rede.servico_de_socket import ServicoDeSocket
 from gekitai.rede.servicos_de_rede import InformacaoDeConexao
@@ -60,23 +62,44 @@ def main():
     controlador_de_rede: Optional[ControladorDeRede] = None
 
     # carregando assets
-    imagem_do_tabuleiro = pygame.image.load("assets/tabuleiro.png")
+    imagem_do_tabuleiro = pygame.image.load(
+        obter_caminho_para_pasta_de_assets("tabuleiro.png", __file__)
+    )
     imagem_do_retrato_jogador_servidor = pygame.transform.smoothscale(
-        pygame.image.load("assets/retrato_jogador_azul.png"), (54, 69)
+        pygame.image.load(
+            obter_caminho_para_pasta_de_assets("retrato_jogador_azul.png", __file__)
+        ),
+        (54, 69),
     )
     imagem_do_retrato_jogador_cliente = pygame.transform.smoothscale(
-        pygame.image.load("assets/retrato_jogador_vermelho.png"), (54, 69)
+        pygame.image.load(
+            obter_caminho_para_pasta_de_assets("retrato_jogador_vermelho.png", __file__)
+        ),
+        (54, 69),
     )
     imagem_da_peca_jogador_servidor = pygame.transform.smoothscale(
-        pygame.image.load("assets/peca_jogador_azul.png"), (80, 80)
+        pygame.image.load(
+            obter_caminho_para_pasta_de_assets("peca_jogador_azul.png", __file__)
+        ),
+        (80, 80),
     )
     imagem_da_peca_jogador_cliente = pygame.transform.smoothscale(
-        pygame.image.load("assets/peca_jogador_vermelho.png"), (80, 80)
+        pygame.image.load(
+            obter_caminho_para_pasta_de_assets("peca_jogador_vermelho.png", __file__)
+        ),
+        (80, 80),
     )
     imagem_borda_status_turno = pygame.transform.smoothscale(
-        pygame.image.load("assets/borda_indicando_status_de_turno.png"), (64, 79)
+        pygame.image.load(
+            obter_caminho_para_pasta_de_assets(
+                "borda_indicando_status_de_turno.png", __file__
+            )
+        ),
+        (64, 79),
     )
-    imagem_da_logo_do_jogo = pygame.image.load("assets/logo.png")
+    imagem_da_logo_do_jogo = pygame.image.load(
+        obter_caminho_para_pasta_de_assets("logo.png", __file__)
+    )
 
     # inicia pygame e gerenciador de interface
     pygame.init()
@@ -664,3 +687,7 @@ def main():
         pygame.display.update()
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    main()

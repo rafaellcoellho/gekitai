@@ -139,7 +139,7 @@ def main():
         manager=gerenciador_de_interface_grafica,
         container=interface_tipo_de_comunicacao,
         anchors={"top": "top"},
-        text="comunicao:",
+        text="comunicação:",
     )
     seletor_tipo_de_comunicacao = pygame_gui.elements.UIDropDownMenu(
         relative_rect=pygame.Rect((0, 0), (200, 25)),

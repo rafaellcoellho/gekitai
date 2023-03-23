@@ -124,14 +124,44 @@ def main():
         },
     )
 
-    interface_entrada_para_ip = pygame_gui.core.UIContainer(
-        relative_rect=pygame.Rect((0, 60), (300, 25)),
+    interface_tipo_de_comunicacao = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 60), (300, 75)),
         manager=gerenciador_de_interface_grafica,
         container=interface_da_tela_inicial,
         anchors={
             "centerx": "centerx",
             "top": "top",
             "top_target": logo_do_jogo,
+        },
+    )
+    label_tipo_de_comunicacao = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect((0, 0), (100, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_tipo_de_comunicacao,
+        anchors={"top": "top"},
+        text="comunicao:",
+    )
+    seletor_tipo_de_comunicacao = pygame_gui.elements.UIDropDownMenu(
+        relative_rect=pygame.Rect((0, 0), (200, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_tipo_de_comunicacao,
+        anchors={
+            "left": "left",
+            "top": "top",
+            "left_target": label_tipo_de_comunicacao,
+        },
+        options_list=["sockets", "pyro"],
+        starting_option="sockets",
+    )
+
+    interface_entrada_para_ip = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 0), (300, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_da_tela_inicial,
+        anchors={
+            "centerx": "centerx",
+            "top": "top",
+            "top_target": interface_tipo_de_comunicacao,
         },
     )
     label_entrada_ip = pygame_gui.elements.UILabel(
@@ -174,6 +204,34 @@ def main():
         container=interface_entrada_para_porta,
         anchors={"left": "left", "left_target": label_entrada_porta},
         initial_text="5555",
+    )
+
+    interface_entrada_para_nome_objeto_pyro = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 0), (300, 35)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_da_tela_inicial,
+        anchors={
+            "centerx": "centerx",
+            "top": "top",
+            "top_target": interface_tipo_de_comunicacao,
+        },
+    )
+    label_nome_objeto_pyro = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect(
+            (0, 0), (100, interface_entrada_para_nome_objeto_pyro.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_entrada_para_nome_objeto_pyro,
+        text="apelido:",
+    )
+    entrada_nome_objeto_pyro = pygame_gui.elements.UITextEntryLine(
+        relative_rect=pygame.Rect(
+            (0, 0), (200, interface_entrada_para_nome_objeto_pyro.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_entrada_para_nome_objeto_pyro,
+        anchors={"left": "left", "left_target": label_nome_objeto_pyro},
+        initial_text="joao",
     )
 
     interface_botoes_iniciar_jogo = pygame_gui.core.UIContainer(
@@ -661,6 +719,16 @@ def main():
                     interface.show()
                 else:
                     interface.hide()
+
+        if estado_da_tela["atual"] == "inicial":
+            if seletor_tipo_de_comunicacao.selected_option == "sockets":
+                interface_entrada_para_nome_objeto_pyro.hide()
+                interface_entrada_para_ip.show()
+                interface_entrada_para_porta.show()
+            else:
+                interface_entrada_para_ip.hide()
+                interface_entrada_para_porta.hide()
+                interface_entrada_para_nome_objeto_pyro.show()
 
         gerenciador_de_interface_grafica.update(delta_de_tempo / 1000.0)
 

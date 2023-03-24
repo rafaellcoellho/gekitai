@@ -435,52 +435,68 @@ def main():
         },
     }
 
-    # funções de manipulação do estado do tabuleiro
-    def inserir_peca_no_tabuleiro(linha_alvo, coluna_alvo, peca_alvo):
-        estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = peca_alvo
-        imagem_da_peca_por_papel = (
-            imagem_da_peca_jogador_servidor
-            if peca_alvo == "servidor"
-            else imagem_da_peca_jogador_cliente
-        )
-        peca_do_tabuleiro = pygame_gui.elements.UIImage(
-            relative_rect=pygame.Rect(
-                (
-                    (coluna_alvo * lado_quadrados[0])
-                    + tamanho_offset_borda_interna[0]
-                    + tamanho_offset_borda_externa[0],
-                    (linha_alvo * lado_quadrados[1])
-                    + tamanho_offset_borda_interna[0]
-                    + tamanho_offset_borda_externa[0],
+    class ControladorTabuleiro:
+        @staticmethod
+        def inserir_peca_no_tabuleiro(linha_alvo, coluna_alvo, peca_alvo):
+            estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = peca_alvo
+            imagem_da_peca_por_papel = (
+                imagem_da_peca_jogador_servidor
+                if peca_alvo == "servidor"
+                else imagem_da_peca_jogador_cliente
+            )
+            peca_do_tabuleiro = pygame_gui.elements.UIImage(
+                relative_rect=pygame.Rect(
+                    (
+                        (coluna_alvo * lado_quadrados[0])
+                        + tamanho_offset_borda_interna[0]
+                        + tamanho_offset_borda_externa[0],
+                        (linha_alvo * lado_quadrados[1])
+                        + tamanho_offset_borda_interna[0]
+                        + tamanho_offset_borda_externa[0],
+                    ),
+                    (
+                        imagem_da_peca_por_papel.get_width(),
+                        imagem_da_peca_por_papel.get_height(),
+                    ),
                 ),
-                (
-                    imagem_da_peca_por_papel.get_width(),
-                    imagem_da_peca_por_papel.get_height(),
-                ),
-            ),
-            image_surface=imagem_da_peca_por_papel,
-            manager=gerenciador_de_interface_grafica,
-            container=interface_do_tabuleiro,
-        )
-        interface_grafica_das_pecas_no_tabuleiro.append(peca_do_tabuleiro)
+                image_surface=imagem_da_peca_por_papel,
+                manager=gerenciador_de_interface_grafica,
+                container=interface_do_tabuleiro,
+            )
+            interface_grafica_das_pecas_no_tabuleiro.append(peca_do_tabuleiro)
 
-    def remover_peca_no_tabuleiro(linha_alvo, coluna_alvo, ponto_do_clique):
-        estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = "vazio"
-        for indice, peca in enumerate(interface_grafica_das_pecas_no_tabuleiro):
-            if peca.rect.collidepoint(ponto_do_clique):
-                peca.kill()
-                del interface_grafica_das_pecas_no_tabuleiro[indice]
+        @staticmethod
+        def remover_peca_no_tabuleiro(linha_alvo, coluna_alvo, ponto_do_clique):
+            estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = "vazio"
+            for indice, peca in enumerate(interface_grafica_das_pecas_no_tabuleiro):
+                if peca.rect.collidepoint(ponto_do_clique):
+                    peca.kill()
+                    del interface_grafica_das_pecas_no_tabuleiro[indice]
+
+    class ControladorChat:
+        @staticmethod
+        def registrar_mensagem(identificador, conteudo):
+            log_de_mensagens.append_html_text(f"{identificador}: {conteudo}<br>")
+
+    class ControladorEstado:
+        @staticmethod
+        def define_ganhador_do_jogo(ganhador):
+            estado_do_jogo["ganhador"] = ganhador
+            texto_de_fim_de_jogo.set_text(f"Ganhador: {estado_do_jogo['ganhador']}")
+            estado_da_tela["atual"] = "fim"
+
+        @staticmethod
+        def define_jogador_que_detem_o_turno(jogador_para_passar_turno):
+            estado_do_jogo["turno_do_jogador"] = jogador_para_passar_turno
 
     # função de parser de mensagem
     def recebe_dados_do_cliente(mensagem_recebida: str):
         if mensagem_recebida == "DST":
-            estado_do_jogo["ganhador"] = "servidor"
-            texto_de_fim_de_jogo.set_text(f"Ganhador: {estado_do_jogo['ganhador']}")
-            estado_da_tela["atual"] = "fim"
+            ControladorEstado.define_ganhador_do_jogo("servidor")
         elif mensagem_recebida == "PAS":
-            estado_do_jogo["turno_do_jogador"] = "servidor"
+            ControladorEstado.define_jogador_que_detem_o_turno("servidor")
         elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            inserir_peca_no_tabuleiro(
+            ControladorTabuleiro.inserir_peca_no_tabuleiro(
                 linha_alvo=int(mensagem_recebida[8]),
                 coluna_alvo=int(mensagem_recebida[5]),
                 peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
@@ -494,7 +510,7 @@ def main():
             ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
                 1, 2, 3, 4
             )
-            remover_peca_no_tabuleiro(
+            ControladorTabuleiro.remover_peca_no_tabuleiro(
                 linha_alvo=int(linha_alvo),
                 coluna_alvo=int(coluna_alvo),
                 ponto_do_clique=(
@@ -504,19 +520,17 @@ def main():
             )
         elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
             conteudo = mensagem_recebida[4:]
-            log_de_mensagens.append_html_text(
-                f"{identificacao_do_cliente_no_chat}: {conteudo}<br>"
+            ControladorChat.registrar_mensagem(
+                identificacao_do_cliente_no_chat, conteudo
             )
 
     def recebe_dados_do_servidor(mensagem_recebida: str):
         if mensagem_recebida == "DST":
-            estado_do_jogo["ganhador"] = "cliente"
-            texto_de_fim_de_jogo.set_text(f"Ganhador: {estado_do_jogo['ganhador']}")
-            estado_da_tela["atual"] = "fim"
+            ControladorEstado.define_ganhador_do_jogo("cliente")
         elif mensagem_recebida == "PAS":
-            estado_do_jogo["turno_do_jogador"] = "cliente"
+            ControladorEstado.define_jogador_que_detem_o_turno("cliente")
         elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            inserir_peca_no_tabuleiro(
+            ControladorTabuleiro.inserir_peca_no_tabuleiro(
                 linha_alvo=int(mensagem_recebida[8]),
                 coluna_alvo=int(mensagem_recebida[5]),
                 peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
@@ -530,7 +544,7 @@ def main():
             ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
                 1, 2, 3, 4
             )
-            remover_peca_no_tabuleiro(
+            ControladorTabuleiro.remover_peca_no_tabuleiro(
                 linha_alvo=int(linha_alvo),
                 coluna_alvo=int(coluna_alvo),
                 ponto_do_clique=(
@@ -540,8 +554,8 @@ def main():
             )
         elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
             conteudo = mensagem_recebida[4:]
-            log_de_mensagens.append_html_text(
-                f"{identificacao_do_servidor_no_chat}: {conteudo}<br>"
+            ControladorChat.registrar_mensagem(
+                identificacao_do_servidor_no_chat, conteudo
             )
 
     # relogio do jogo
@@ -592,28 +606,28 @@ def main():
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_de_desistir:
                             controlador_de_rede.enviar_mensagem(f"DST")
-                            estado_do_jogo["ganhador"] = (
+                            ControladorEstado.define_ganhador_do_jogo(
                                 "servidor"
                                 if not controlador_de_rede.servico_de_rede.eh_anfitriao
                                 else "cliente"
                             )
-                            texto_de_fim_de_jogo.set_text(
-                                f"Ganhador: {estado_do_jogo['ganhador']}"
-                            )
-                            estado_da_tela["atual"] = "fim"
                         elif evento.ui_element == botao_de_passar_turno:
                             if (
                                 controlador_de_rede.servico_de_rede.eh_anfitriao
                                 and estado_do_jogo["turno_do_jogador"] == "servidor"
                             ):
                                 controlador_de_rede.enviar_mensagem(f"PAS")
-                                estado_do_jogo["turno_do_jogador"] = "cliente"
+                                ControladorEstado.define_jogador_que_detem_o_turno(
+                                    "cliente"
+                                )
                             elif (
                                 not controlador_de_rede.servico_de_rede.eh_anfitriao
                                 and estado_do_jogo["turno_do_jogador"] == "cliente"
                             ):
                                 controlador_de_rede.enviar_mensagem(f"PAS")
-                                estado_do_jogo["turno_do_jogador"] = "servidor"
+                                ControladorEstado.define_jogador_que_detem_o_turno(
+                                    "servidor"
+                                )
                         elif evento.ui_element == botao_de_enviar:
                             mensagem_para_enviar = entrada_de_texto.get_text()
                             if mensagem_para_enviar:
@@ -623,8 +637,8 @@ def main():
                                     if controlador_de_rede.servico_de_rede.eh_anfitriao
                                     else identificacao_do_cliente_no_chat
                                 )
-                                log_de_mensagens.append_html_text(
-                                    f"{identificacao_jogador_no_chat}: {mensagem_para_enviar}<br>"
+                                ControladorChat.registrar_mensagem(
+                                    identificacao_jogador_no_chat, mensagem_para_enviar
                                 )
                                 controlador_de_rede.enviar_mensagem(
                                     f"CHT={mensagem_para_enviar}"
@@ -688,7 +702,7 @@ def main():
                                 peca_que_vai_interagir = (
                                     jogador if evento.button == 1 else oponente
                                 )
-                                inserir_peca_no_tabuleiro(
+                                ControladorTabuleiro.inserir_peca_no_tabuleiro(
                                     linha, coluna, peca_que_vai_interagir
                                 )
                                 if jogador == "servidor":
@@ -703,7 +717,7 @@ def main():
                                     f"CNP=({coluna}, {linha}, {peca_que_oponente_tem_que_colocar})"
                                 )
                             else:
-                                remover_peca_no_tabuleiro(
+                                ControladorTabuleiro.remover_peca_no_tabuleiro(
                                     linha, coluna, posicao_do_mouse
                                 )
                                 controlador_de_rede.enviar_mensagem(

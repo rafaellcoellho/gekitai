@@ -495,16 +495,16 @@ def main():
             self.chat = ControladorChat
             self.estado = ControladorEstado
 
-    controlador = Controlador()
+    controlador_pessoal = Controlador()
 
     # função de parser de mensagem
     def recebe_dados_do_cliente(mensagem_recebida: str):
         if mensagem_recebida == "DST":
-            controlador.estado.define_ganhador_do_jogo("servidor")
+            controlador_pessoal.estado.define_ganhador_do_jogo("servidor")
         elif mensagem_recebida == "PAS":
-            controlador.estado.define_jogador_que_detem_o_turno("servidor")
+            controlador_pessoal.estado.define_jogador_que_detem_o_turno("servidor")
         elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            controlador.tabuleiro.inserir_peca_no_tabuleiro(
+            controlador_pessoal.tabuleiro.inserir_peca_no_tabuleiro(
                 linha_alvo=int(mensagem_recebida[8]),
                 coluna_alvo=int(mensagem_recebida[5]),
                 peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
@@ -518,7 +518,7 @@ def main():
             ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
                 1, 2, 3, 4
             )
-            controlador.tabuleiro.remover_peca_no_tabuleiro(
+            controlador_pessoal.tabuleiro.remover_peca_no_tabuleiro(
                 linha_alvo=int(linha_alvo),
                 coluna_alvo=int(coluna_alvo),
                 ponto_do_clique=(
@@ -528,17 +528,17 @@ def main():
             )
         elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
             conteudo = mensagem_recebida[4:]
-            controlador.chat.registrar_mensagem(
+            controlador_pessoal.chat.registrar_mensagem(
                 identificacao_do_cliente_no_chat, conteudo
             )
 
     def recebe_dados_do_servidor(mensagem_recebida: str):
         if mensagem_recebida == "DST":
-            controlador.estado.define_ganhador_do_jogo("cliente")
+            controlador_pessoal.estado.define_ganhador_do_jogo("cliente")
         elif mensagem_recebida == "PAS":
-            controlador.estado.define_jogador_que_detem_o_turno("cliente")
+            controlador_pessoal.estado.define_jogador_que_detem_o_turno("cliente")
         elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            controlador.tabuleiro.inserir_peca_no_tabuleiro(
+            controlador_pessoal.tabuleiro.inserir_peca_no_tabuleiro(
                 linha_alvo=int(mensagem_recebida[8]),
                 coluna_alvo=int(mensagem_recebida[5]),
                 peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
@@ -552,7 +552,7 @@ def main():
             ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
                 1, 2, 3, 4
             )
-            controlador.tabuleiro.remover_peca_no_tabuleiro(
+            controlador_pessoal.tabuleiro.remover_peca_no_tabuleiro(
                 linha_alvo=int(linha_alvo),
                 coluna_alvo=int(coluna_alvo),
                 ponto_do_clique=(
@@ -562,7 +562,7 @@ def main():
             )
         elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
             conteudo = mensagem_recebida[4:]
-            controlador.chat.registrar_mensagem(
+            controlador_pessoal.chat.registrar_mensagem(
                 identificacao_do_servidor_no_chat, conteudo
             )
 
@@ -614,7 +614,7 @@ def main():
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_de_desistir:
                             controlador_de_rede.enviar_mensagem(f"DST")
-                            controlador.estado.define_ganhador_do_jogo(
+                            controlador_pessoal.estado.define_ganhador_do_jogo(
                                 "servidor"
                                 if not controlador_de_rede.servico_de_rede.eh_anfitriao
                                 else "cliente"
@@ -625,7 +625,7 @@ def main():
                                 and estado_do_jogo["turno_do_jogador"] == "servidor"
                             ):
                                 controlador_de_rede.enviar_mensagem(f"PAS")
-                                controlador.estado.define_jogador_que_detem_o_turno(
+                                controlador_pessoal.estado.define_jogador_que_detem_o_turno(
                                     "cliente"
                                 )
                             elif (
@@ -633,7 +633,7 @@ def main():
                                 and estado_do_jogo["turno_do_jogador"] == "cliente"
                             ):
                                 controlador_de_rede.enviar_mensagem(f"PAS")
-                                controlador.estado.define_jogador_que_detem_o_turno(
+                                controlador_pessoal.estado.define_jogador_que_detem_o_turno(
                                     "servidor"
                                 )
                         elif evento.ui_element == botao_de_enviar:
@@ -645,7 +645,7 @@ def main():
                                     if controlador_de_rede.servico_de_rede.eh_anfitriao
                                     else identificacao_do_cliente_no_chat
                                 )
-                                controlador.chat.registrar_mensagem(
+                                controlador_pessoal.chat.registrar_mensagem(
                                     identificacao_jogador_no_chat, mensagem_para_enviar
                                 )
                                 controlador_de_rede.enviar_mensagem(
@@ -710,7 +710,7 @@ def main():
                                 peca_que_vai_interagir = (
                                     jogador if evento.button == 1 else oponente
                                 )
-                                controlador.tabuleiro.inserir_peca_no_tabuleiro(
+                                controlador_pessoal.tabuleiro.inserir_peca_no_tabuleiro(
                                     linha, coluna, peca_que_vai_interagir
                                 )
                                 if jogador == "servidor":
@@ -725,7 +725,7 @@ def main():
                                     f"CNP=({coluna}, {linha}, {peca_que_oponente_tem_que_colocar})"
                                 )
                             else:
-                                controlador.tabuleiro.remover_peca_no_tabuleiro(
+                                controlador_pessoal.tabuleiro.remover_peca_no_tabuleiro(
                                     linha, coluna, posicao_do_mouse
                                 )
                                 controlador_de_rede.enviar_mensagem(

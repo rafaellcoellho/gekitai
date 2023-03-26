@@ -5,8 +5,9 @@ from typing import Any, Optional
 
 @dataclass
 class InformacaoDeConexao(ABC):
-    endereco: str
-    porta: int
+    endereco: str = ""
+    porta: int = 0
+    nome_da_sala: str = ""
 
 
 class ControladorDeOponente(ABC):
@@ -51,4 +52,8 @@ class ServicoDeRede(ABC):
 
     @abstractmethod
     def encerrar(self):
+        pass
+
+    @abstractmethod
+    def garantir_funcionamento_do_servico_de_rede(self):
         pass

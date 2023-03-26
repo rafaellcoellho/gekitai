@@ -94,6 +94,9 @@ class ServicoDeSocket(ServicoDeRede):
         self.socket.close()
         self.seletores.close()
 
+    def garantir_funcionamento_do_servico_de_rede(self):
+        pass
+
     def enviar_mensagem(self, mensagem: str):
         bytes_para_enviar: bytes = str.encode(mensagem)
         if self.eh_anfitriao and self.socket_conectado_ao_cliente:

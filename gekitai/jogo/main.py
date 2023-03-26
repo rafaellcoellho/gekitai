@@ -1,5 +1,4 @@
 import math
-import re
 from typing import Optional
 
 import pygame
@@ -8,6 +7,7 @@ import pygame_gui
 from gekitai.libs.assets import obter_caminho_para_pasta_de_assets
 from gekitai.rede.controlador_de_rede import ControladorDeRede
 from gekitai.rede.servico_de_socket import ServicoDeSocket
+from gekitai.rede.servico_pyro import ServicoPyro
 from gekitai.rede.servicos_de_rede import InformacaoDeConexao
 
 
@@ -15,13 +15,6 @@ def main():
     # constantes
     tamanho_da_janela = (936, 655)
     cor_de_fundo = (49, 46, 43)
-
-    identificacao_do_servidor_no_chat = "<font color=#46B8F7>servidor</font>"
-    identificacao_do_cliente_no_chat = "<font color=#C65454>cliente</font>"
-
-    parser_do_comando_criar_peca = re.compile(r"^CNP=\((\d), (\d), (\d)\)$")
-    parser_do_comando_remover_peca = re.compile(r"^RPE=\((\d), (\d), (\d+), (\d+)\)$")
-    parser_do_comando_mensagem_do_chat = re.compile(r"^CHT=(.*)$")
 
     tamanho_offset_borda_externa = (11, 11)
     tamanho_offset_borda_interna = (10, 10)
@@ -222,7 +215,7 @@ def main():
         ),
         manager=gerenciador_de_interface_grafica,
         container=interface_entrada_para_nome_objeto_pyro,
-        text="apelido:",
+        text="sala:",
     )
     entrada_nome_objeto_pyro = pygame_gui.elements.UITextEntryLine(
         relative_rect=pygame.Rect(
@@ -533,7 +526,13 @@ def main():
                                 )
                                 if seletor_tipo_de_comunicacao.selected_option
                                 == "sockets"
-                                else None
+                                else ServicoPyro(
+                                    info_de_conexao=InformacaoDeConexao(
+                                        nome_da_sala=entrada_nome_objeto_pyro.get_text(),
+                                    ),
+                                    eh_anfitriao=True,
+                                    controlador_local=controlador_pessoal,
+                                )
                             )
                             controlador_de_rede = ControladorDeRede(
                                 servico_de_rede=servico,
@@ -551,7 +550,13 @@ def main():
                                 )
                                 if seletor_tipo_de_comunicacao.selected_option
                                 == "sockets"
-                                else None
+                                else ServicoPyro(
+                                    info_de_conexao=InformacaoDeConexao(
+                                        nome_da_sala=entrada_nome_objeto_pyro.get_text(),
+                                    ),
+                                    eh_anfitriao=False,
+                                    controlador_local=controlador_pessoal,
+                                )
                             )
                             controlador_de_rede = ControladorDeRede(
                                 servico_de_rede=servico,

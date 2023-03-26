@@ -224,7 +224,7 @@ def main():
         manager=gerenciador_de_interface_grafica,
         container=interface_entrada_para_nome_objeto_pyro,
         anchors={"left": "left", "left_target": label_nome_objeto_pyro},
-        initial_text="joao",
+        initial_text="ppd",
     )
 
     interface_botoes_iniciar_jogo = pygame_gui.core.UIContainer(

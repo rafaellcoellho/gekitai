@@ -31,7 +31,6 @@ class ControladorPyro(ControladorDeOponente):
         )
 
     def adicionar_mensagem_no_chat(self, mensagem: str):
-        print(self.eh_anfitriao)
         self.controlador.chat.registrar_mensagem(
             mensagem,
             self.controlador.chat.identificacao_do_cliente
@@ -86,7 +85,6 @@ class ServicoPyro(ServicoDeRede):
         uri = self.daemon_do_pyro.register(self.controlador_local_para_expor_na_rede)
         papel = "anfitriao" if self.eh_anfitriao else "oponente"
         servidor_de_nomes.register(f"{self.info_de_conexao.nome_da_sala}.{papel}", uri)
-        print("URI:", uri)
 
         if not self.eh_anfitriao:
             self.controlador_oponente = Pyro5.api.Proxy(

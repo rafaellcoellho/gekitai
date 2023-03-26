@@ -1,5 +1,4 @@
 import math
-import re
 from typing import Optional
 
 import pygame
@@ -8,6 +7,7 @@ import pygame_gui
 from gekitai.libs.assets import obter_caminho_para_pasta_de_assets
 from gekitai.rede.controlador_de_rede import ControladorDeRede
 from gekitai.rede.servico_de_socket import ServicoDeSocket
+from gekitai.rede.servico_pyro import ServicoPyro
 from gekitai.rede.servicos_de_rede import InformacaoDeConexao
 
 
@@ -15,13 +15,6 @@ def main():
     # constantes
     tamanho_da_janela = (936, 655)
     cor_de_fundo = (49, 46, 43)
-
-    identificacao_do_servidor_no_chat = "<font color=#46B8F7>servidor</font>"
-    identificacao_do_cliente_no_chat = "<font color=#C65454>cliente</font>"
-
-    parser_do_comando_criar_peca = re.compile(r"^CNP=\((\d), (\d), (\d)\)$")
-    parser_do_comando_remover_peca = re.compile(r"^RPE=\((\d), (\d), (\d+), (\d+)\)$")
-    parser_do_comando_mensagem_do_chat = re.compile(r"^CHT=(.*)$")
 
     tamanho_offset_borda_externa = (11, 11)
     tamanho_offset_borda_interna = (10, 10)
@@ -124,14 +117,44 @@ def main():
         },
     )
 
-    interface_entrada_para_ip = pygame_gui.core.UIContainer(
-        relative_rect=pygame.Rect((0, 60), (300, 25)),
+    interface_tipo_de_comunicacao = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 60), (300, 75)),
         manager=gerenciador_de_interface_grafica,
         container=interface_da_tela_inicial,
         anchors={
             "centerx": "centerx",
             "top": "top",
             "top_target": logo_do_jogo,
+        },
+    )
+    label_tipo_de_comunicacao = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect((0, 0), (100, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_tipo_de_comunicacao,
+        anchors={"top": "top"},
+        text="comunicação:",
+    )
+    seletor_tipo_de_comunicacao = pygame_gui.elements.UIDropDownMenu(
+        relative_rect=pygame.Rect((0, 0), (200, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_tipo_de_comunicacao,
+        anchors={
+            "left": "left",
+            "top": "top",
+            "left_target": label_tipo_de_comunicacao,
+        },
+        options_list=["sockets", "pyro"],
+        starting_option="sockets",
+    )
+
+    interface_entrada_para_ip = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 0), (300, 25)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_da_tela_inicial,
+        anchors={
+            "centerx": "centerx",
+            "top": "top",
+            "top_target": interface_tipo_de_comunicacao,
         },
     )
     label_entrada_ip = pygame_gui.elements.UILabel(
@@ -174,6 +197,34 @@ def main():
         container=interface_entrada_para_porta,
         anchors={"left": "left", "left_target": label_entrada_porta},
         initial_text="5555",
+    )
+
+    interface_entrada_para_nome_objeto_pyro = pygame_gui.core.UIContainer(
+        relative_rect=pygame.Rect((0, 0), (300, 35)),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_da_tela_inicial,
+        anchors={
+            "centerx": "centerx",
+            "top": "top",
+            "top_target": interface_tipo_de_comunicacao,
+        },
+    )
+    label_nome_objeto_pyro = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect(
+            (0, 0), (100, interface_entrada_para_nome_objeto_pyro.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_entrada_para_nome_objeto_pyro,
+        text="sala:",
+    )
+    entrada_nome_objeto_pyro = pygame_gui.elements.UITextEntryLine(
+        relative_rect=pygame.Rect(
+            (0, 0), (200, interface_entrada_para_nome_objeto_pyro.relative_rect.height)
+        ),
+        manager=gerenciador_de_interface_grafica,
+        container=interface_entrada_para_nome_objeto_pyro,
+        anchors={"left": "left", "left_target": label_nome_objeto_pyro},
+        initial_text="ppd",
     )
 
     interface_botoes_iniciar_jogo = pygame_gui.core.UIContainer(
@@ -377,114 +428,78 @@ def main():
         },
     }
 
-    # funções de manipulação do estado do tabuleiro
-    def inserir_peca_no_tabuleiro(linha_alvo, coluna_alvo, peca_alvo):
-        estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = peca_alvo
-        imagem_da_peca_por_papel = (
-            imagem_da_peca_jogador_servidor
-            if peca_alvo == "servidor"
-            else imagem_da_peca_jogador_cliente
-        )
-        peca_do_tabuleiro = pygame_gui.elements.UIImage(
-            relative_rect=pygame.Rect(
-                (
-                    (coluna_alvo * lado_quadrados[0])
-                    + tamanho_offset_borda_interna[0]
-                    + tamanho_offset_borda_externa[0],
-                    (linha_alvo * lado_quadrados[1])
-                    + tamanho_offset_borda_interna[0]
-                    + tamanho_offset_borda_externa[0],
+    class ControladorTabuleiro:
+        @staticmethod
+        def inserir_peca_no_tabuleiro(linha_alvo, coluna_alvo, peca_alvo):
+            estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = peca_alvo
+            imagem_da_peca_por_papel = (
+                imagem_da_peca_jogador_servidor
+                if peca_alvo == "servidor"
+                else imagem_da_peca_jogador_cliente
+            )
+            peca_do_tabuleiro = pygame_gui.elements.UIImage(
+                relative_rect=pygame.Rect(
+                    (
+                        (coluna_alvo * lado_quadrados[0])
+                        + tamanho_offset_borda_interna[0]
+                        + tamanho_offset_borda_externa[0],
+                        (linha_alvo * lado_quadrados[1])
+                        + tamanho_offset_borda_interna[0]
+                        + tamanho_offset_borda_externa[0],
+                    ),
+                    (
+                        imagem_da_peca_por_papel.get_width(),
+                        imagem_da_peca_por_papel.get_height(),
+                    ),
                 ),
-                (
-                    imagem_da_peca_por_papel.get_width(),
-                    imagem_da_peca_por_papel.get_height(),
-                ),
-            ),
-            image_surface=imagem_da_peca_por_papel,
-            manager=gerenciador_de_interface_grafica,
-            container=interface_do_tabuleiro,
-        )
-        interface_grafica_das_pecas_no_tabuleiro.append(peca_do_tabuleiro)
+                image_surface=imagem_da_peca_por_papel,
+                manager=gerenciador_de_interface_grafica,
+                container=interface_do_tabuleiro,
+            )
+            interface_grafica_das_pecas_no_tabuleiro.append(peca_do_tabuleiro)
 
-    def remover_peca_no_tabuleiro(linha_alvo, coluna_alvo, ponto_do_clique):
-        estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = "vazio"
-        for indice, peca in enumerate(interface_grafica_das_pecas_no_tabuleiro):
-            if peca.rect.collidepoint(ponto_do_clique):
-                peca.kill()
-                del interface_grafica_das_pecas_no_tabuleiro[indice]
+        @staticmethod
+        def remover_peca_no_tabuleiro(linha_alvo, coluna_alvo, ponto_do_clique):
+            estado_do_jogo["estado_do_tabuleiro"][linha_alvo][coluna_alvo] = "vazio"
+            for indice, peca in enumerate(interface_grafica_das_pecas_no_tabuleiro):
+                if peca.rect.collidepoint(ponto_do_clique):
+                    peca.kill()
+                    del interface_grafica_das_pecas_no_tabuleiro[indice]
 
-    # função de parser de mensagem
-    def recebe_dados_do_cliente(mensagem_recebida: str):
-        if mensagem_recebida == "DST":
-            estado_do_jogo["ganhador"] = "servidor"
+    class ControladorChat:
+        identificacao_do_servidor = "<font color=#46B8F7>servidor</font>"
+        identificacao_do_cliente = "<font color=#C65454>cliente</font>"
+
+        @staticmethod
+        def registrar_mensagem(conteudo, identificador):
+            log_de_mensagens.append_html_text(f"{identificador}: {conteudo}<br>")
+
+    class ControladorEstado:
+        @staticmethod
+        def define_ganhador_do_jogo(ganhador):
+            estado_do_jogo["ganhador"] = ganhador
             texto_de_fim_de_jogo.set_text(f"Ganhador: {estado_do_jogo['ganhador']}")
             estado_da_tela["atual"] = "fim"
-        elif mensagem_recebida == "PAS":
-            estado_do_jogo["turno_do_jogador"] = "servidor"
-        elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            inserir_peca_no_tabuleiro(
-                linha_alvo=int(mensagem_recebida[8]),
-                coluna_alvo=int(mensagem_recebida[5]),
-                peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
-            )
-        elif parser_do_comando_remover_peca.match(mensagem_recebida):
-            (
-                linha_alvo,
-                coluna_alvo,
-                posicao_do_mouse_x,
-                posicao_do_mouse_y,
-            ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
-                1, 2, 3, 4
-            )
-            remover_peca_no_tabuleiro(
-                linha_alvo=int(linha_alvo),
-                coluna_alvo=int(coluna_alvo),
-                ponto_do_clique=(
-                    int(posicao_do_mouse_x),
-                    int(posicao_do_mouse_y),
-                ),
-            )
-        elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
-            conteudo = mensagem_recebida[4:]
-            log_de_mensagens.append_html_text(
-                f"{identificacao_do_cliente_no_chat}: {conteudo}<br>"
-            )
 
-    def recebe_dados_do_servidor(mensagem_recebida: str):
-        if mensagem_recebida == "DST":
-            estado_do_jogo["ganhador"] = "cliente"
-            texto_de_fim_de_jogo.set_text(f"Ganhador: {estado_do_jogo['ganhador']}")
-            estado_da_tela["atual"] = "fim"
-        elif mensagem_recebida == "PAS":
-            estado_do_jogo["turno_do_jogador"] = "cliente"
-        elif parser_do_comando_criar_peca.match(mensagem_recebida):
-            inserir_peca_no_tabuleiro(
-                linha_alvo=int(mensagem_recebida[8]),
-                coluna_alvo=int(mensagem_recebida[5]),
-                peca_alvo="servidor" if int(mensagem_recebida[11]) == 0 else "cliente",
-            )
-        elif parser_do_comando_remover_peca.match(mensagem_recebida):
-            (
-                linha_alvo,
-                coluna_alvo,
-                posicao_do_mouse_x,
-                posicao_do_mouse_y,
-            ) = parser_do_comando_remover_peca.match(mensagem_recebida).group(
-                1, 2, 3, 4
-            )
-            remover_peca_no_tabuleiro(
-                linha_alvo=int(linha_alvo),
-                coluna_alvo=int(coluna_alvo),
-                ponto_do_clique=(
-                    int(posicao_do_mouse_x),
-                    int(posicao_do_mouse_y),
-                ),
-            )
-        elif parser_do_comando_mensagem_do_chat.match(mensagem_recebida):
-            conteudo = mensagem_recebida[4:]
-            log_de_mensagens.append_html_text(
-                f"{identificacao_do_servidor_no_chat}: {conteudo}<br>"
-            )
+        @staticmethod
+        def define_jogador_que_detem_o_turno(jogador_para_passar_turno):
+            estado_do_jogo["turno_do_jogador"] = jogador_para_passar_turno
+
+        @staticmethod
+        def atualizar_para_tela_de_jogo():
+            estado_da_tela["atual"] = "jogo"
+
+        @staticmethod
+        def atualizar_para_esperando_conexao():
+            estado_da_tela["atual"] = "esperando_conexao"
+
+    class Controlador:
+        def __init__(self):
+            self.tabuleiro = ControladorTabuleiro
+            self.chat = ControladorChat
+            self.estado = ControladorEstado
+
+    controlador_pessoal = Controlador()
 
     # relogio do jogo
     relogio = pygame.time.Clock()
@@ -500,76 +515,93 @@ def main():
                 if estado_da_tela["atual"] == "inicial":
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_criar_partida_como_servidor:
-
-                            def atualizar_para_tela_de_jogo():
-                                estado_da_tela["atual"] = "jogo"
-
-                            controlador_de_rede = ControladorDeRede(
-                                servico_de_rede=ServicoDeSocket(
+                            servico = (
+                                ServicoDeSocket(
                                     info_de_conexao=InformacaoDeConexao(
                                         endereco=entrada_ip.get_text(),
                                         porta=int(entrada_porta.get_text()),
                                     ),
                                     eh_anfitriao=True,
-                                ),
-                                ao_receber_mensagem=recebe_dados_do_cliente,
-                                ao_conectar=atualizar_para_tela_de_jogo,
+                                    controlador_local=controlador_pessoal,
+                                )
+                                if seletor_tipo_de_comunicacao.selected_option
+                                == "sockets"
+                                else ServicoPyro(
+                                    info_de_conexao=InformacaoDeConexao(
+                                        nome_da_sala=entrada_nome_objeto_pyro.get_text(),
+                                    ),
+                                    eh_anfitriao=True,
+                                    controlador_local=controlador_pessoal,
+                                )
                             )
-                            controlador_de_rede.iniciar()
-                            estado_da_tela["atual"] = "esperando_conexao"
-                        elif evento.ui_element == botao_entrar_em_partida_como_cliente:
                             controlador_de_rede = ControladorDeRede(
-                                servico_de_rede=ServicoDeSocket(
+                                servico_de_rede=servico,
+                            )
+                            controlador_pessoal.estado.atualizar_para_esperando_conexao()
+                        elif evento.ui_element == botao_entrar_em_partida_como_cliente:
+                            servico = (
+                                ServicoDeSocket(
                                     info_de_conexao=InformacaoDeConexao(
                                         endereco=entrada_ip.get_text(),
                                         porta=int(entrada_porta.get_text()),
                                     ),
                                     eh_anfitriao=False,
-                                ),
-                                ao_receber_mensagem=recebe_dados_do_servidor,
+                                    controlador_local=controlador_pessoal,
+                                )
+                                if seletor_tipo_de_comunicacao.selected_option
+                                == "sockets"
+                                else ServicoPyro(
+                                    info_de_conexao=InformacaoDeConexao(
+                                        nome_da_sala=entrada_nome_objeto_pyro.get_text(),
+                                    ),
+                                    eh_anfitriao=False,
+                                    controlador_local=controlador_pessoal,
+                                )
                             )
-                            controlador_de_rede.iniciar()
-                            estado_da_tela["atual"] = "jogo"
+                            controlador_de_rede = ControladorDeRede(
+                                servico_de_rede=servico,
+                            )
+                            controlador_pessoal.estado.atualizar_para_tela_de_jogo()
                 if estado_da_tela["atual"] == "jogo":
                     if evento.user_type == pygame_gui.UI_BUTTON_PRESSED:
                         if evento.ui_element == botao_de_desistir:
-                            controlador_de_rede.enviar_mensagem(f"DST")
-                            estado_do_jogo["ganhador"] = (
+                            controlador_de_rede.informar_desistencia()
+                            controlador_pessoal.estado.define_ganhador_do_jogo(
                                 "servidor"
                                 if not controlador_de_rede.servico_de_rede.eh_anfitriao
                                 else "cliente"
                             )
-                            texto_de_fim_de_jogo.set_text(
-                                f"Ganhador: {estado_do_jogo['ganhador']}"
-                            )
-                            estado_da_tela["atual"] = "fim"
                         elif evento.ui_element == botao_de_passar_turno:
                             if (
                                 controlador_de_rede.servico_de_rede.eh_anfitriao
                                 and estado_do_jogo["turno_do_jogador"] == "servidor"
                             ):
-                                controlador_de_rede.enviar_mensagem(f"PAS")
-                                estado_do_jogo["turno_do_jogador"] = "cliente"
+                                controlador_de_rede.passar_turno()
+                                controlador_pessoal.estado.define_jogador_que_detem_o_turno(
+                                    "cliente"
+                                )
                             elif (
                                 not controlador_de_rede.servico_de_rede.eh_anfitriao
                                 and estado_do_jogo["turno_do_jogador"] == "cliente"
                             ):
-                                controlador_de_rede.enviar_mensagem(f"PAS")
-                                estado_do_jogo["turno_do_jogador"] = "servidor"
+                                controlador_de_rede.passar_turno()
+                                controlador_pessoal.estado.define_jogador_que_detem_o_turno(
+                                    "servidor"
+                                )
                         elif evento.ui_element == botao_de_enviar:
                             mensagem_para_enviar = entrada_de_texto.get_text()
                             if mensagem_para_enviar:
                                 entrada_de_texto.set_text("")
                                 identificacao_jogador_no_chat = (
-                                    identificacao_do_servidor_no_chat
+                                    ControladorChat.identificacao_do_servidor
                                     if controlador_de_rede.servico_de_rede.eh_anfitriao
-                                    else identificacao_do_cliente_no_chat
+                                    else ControladorChat.identificacao_do_cliente
                                 )
-                                log_de_mensagens.append_html_text(
-                                    f"{identificacao_jogador_no_chat}: {mensagem_para_enviar}<br>"
+                                controlador_pessoal.chat.registrar_mensagem(
+                                    mensagem_para_enviar, identificacao_jogador_no_chat
                                 )
-                                controlador_de_rede.enviar_mensagem(
-                                    f"CHT={mensagem_para_enviar}"
+                                controlador_de_rede.adicionar_mensagem_no_chat(
+                                    mensagem_para_enviar
                                 )
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 if estado_da_tela["atual"] == "jogo":
@@ -630,7 +662,7 @@ def main():
                                 peca_que_vai_interagir = (
                                     jogador if evento.button == 1 else oponente
                                 )
-                                inserir_peca_no_tabuleiro(
+                                controlador_pessoal.tabuleiro.inserir_peca_no_tabuleiro(
                                     linha, coluna, peca_que_vai_interagir
                                 )
                                 if jogador == "servidor":
@@ -641,15 +673,18 @@ def main():
                                     peca_que_oponente_tem_que_colocar = (
                                         1 if evento.button == 1 else 0
                                     )
-                                controlador_de_rede.enviar_mensagem(
-                                    f"CNP=({coluna}, {linha}, {peca_que_oponente_tem_que_colocar})"
+                                controlador_de_rede.criar_peca_no_tabuleiro(
+                                    peca_que_oponente_tem_que_colocar, linha, coluna
                                 )
                             else:
-                                remover_peca_no_tabuleiro(
+                                controlador_pessoal.tabuleiro.remover_peca_no_tabuleiro(
                                     linha, coluna, posicao_do_mouse
                                 )
-                                controlador_de_rede.enviar_mensagem(
-                                    f"RPE=({coluna}, {linha}, {posicao_do_mouse[0]}, {posicao_do_mouse[1]})"
+                                controlador_de_rede.remover_peca_do_tabuleiro(
+                                    linha,
+                                    coluna,
+                                    posicao_do_mouse[0],
+                                    posicao_do_mouse[1],
                                 )
 
             gerenciador_de_interface_grafica.process_events(evento)
@@ -661,6 +696,16 @@ def main():
                     interface.show()
                 else:
                     interface.hide()
+
+        if estado_da_tela["atual"] == "inicial":
+            if seletor_tipo_de_comunicacao.selected_option == "sockets":
+                interface_entrada_para_nome_objeto_pyro.hide()
+                interface_entrada_para_ip.show()
+                interface_entrada_para_porta.show()
+            else:
+                interface_entrada_para_ip.hide()
+                interface_entrada_para_porta.hide()
+                interface_entrada_para_nome_objeto_pyro.show()
 
         gerenciador_de_interface_grafica.update(delta_de_tempo / 1000.0)
 

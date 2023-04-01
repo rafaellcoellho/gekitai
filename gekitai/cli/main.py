@@ -5,6 +5,7 @@ from typing import Sequence
 from gekitai import __version__
 from gekitai.cli.erros import Erro, ModoNaoImplementado
 from gekitai.jogo.main import main as modo_jogo
+from gekitai.pocs.asbtracao_estados_do_jogo import modo_exemplo_estados_do_jogo
 from gekitai.pocs.chat import modo_exemplo_chat_servidor, modo_exemplo_chat_cliente
 from gekitai.pocs.grafico import modo_exemplo_grafico
 from gekitai.pocs.interface_jogo import modo_exemplo_interface_de_jogo
@@ -22,6 +23,8 @@ def executa_modo(argumentos: argparse.Namespace):
         modo_exemplo_interface_de_jogo()
     elif argumentos.modo == "jogo":
         modo_jogo()
+    elif argumentos.modo == "poc_estados":
+        modo_exemplo_estados_do_jogo()
     else:
         raise ModoNaoImplementado
 
@@ -80,6 +83,9 @@ def main(argv: Sequence[str] | None = None):
 
     # prova de conceito da interface de jogo
     subparsers.add_parser("poc_jogo", help="mostrar poc da interface de jogo")
+
+    # prova de conceito de estados de jogo
+    subparsers.add_parser("poc_estados", help="mostrar poc dos estados de jogo")
 
     # jogo
     subparsers.add_parser("jogo", help="executa o jogo")

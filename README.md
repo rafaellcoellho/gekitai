@@ -77,9 +77,19 @@ Rodar ambiente de teste especifico e teste especifico:
 tox -e py310 -- tests/test_main.py::test_inicial
 ```
 
-#### Como instalar
+#### Compilando o binário
 
-TODO
+Instalar [PyInstaller] no ambiente virtual:
+
+```
+$ pip install pyinstaller
+```
+
+Agora basta usar a lib para criar o executável:
+
+```
+$ pyinstaller gekitai.spec
+```
 
 ## Referências
 
